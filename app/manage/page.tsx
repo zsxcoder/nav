@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { addLink, updateLink, deleteLink, reorderLinks } from '@/store/slices/linksSlice';
 import { DataTable } from '@/components/management/DataTable';
 import { EditLinkModal } from '@/components/modals/EditLinkModal';
+import { ImportExport } from '@/components/management/ImportExport';
 import { Link } from '@/types/link';
 
 const { Title } = Typography;
@@ -107,6 +108,11 @@ export default function ManagePage() {
               </Button>
             </div>
           </Space>
+        </div>
+
+        {/* 导入导出工具栏 */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-4">
+          <ImportExport />
         </div>
 
         {/* 数据表格 */}

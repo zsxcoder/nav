@@ -88,6 +88,8 @@ const LinkGridBase: React.FC<LinkGridProps> = ({
     <div 
       className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 p-4 ${className || ''}`}
       style={style}
+      role="region"
+      aria-label={isSearching ? `搜索结果：${displayedLinks.length} 个链接` : `${currentCategory}分类：${displayedLinks.length} 个链接`}
     >
       {displayedLinks.map((link) => (
         <LinkCard

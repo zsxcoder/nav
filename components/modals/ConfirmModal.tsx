@@ -42,7 +42,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       open={open}
       title={
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {icon || <ExclamationCircleOutlined style={{ color: '#faad14' }} />}
+          {icon || <ExclamationCircleOutlined style={{ color: '#faad14' }} aria-hidden="true" />}
           <span>{title}</span>
         </div>
       }
@@ -50,13 +50,17 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       onCancel={onCancel}
       okText={okText}
       cancelText={cancelText}
-      okButtonProps={{ danger: okType === 'danger', loading }}
-      cancelButtonProps={{ disabled: loading }}
+      okButtonProps={{ danger: okType === 'danger', loading, 'aria-label': okText }}
+      cancelButtonProps={{ disabled: loading, 'aria-label': cancelText }}
       closable={!loading}
       maskClosable={!loading}
       keyboard={!loading}
+      aria-labelledby="confirm-modal-title"
+      aria-describedby="confirm-modal-content"
     >
-      {typeof content === 'string' ? <p>{content}</p> : content}
+      <div id="confirm-modal-content">
+        {typeof content === 'string' ? <p>{content}</p> : content}
+      </div>
     </Modal>
   );
 };

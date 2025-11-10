@@ -7,10 +7,10 @@
   --background-secondary: #f5f5f5;
   --background-tertiary: #fafafa;
   
-  /* 前景颜色 */
-  --foreground: #171717;
-  --foreground-secondary: #525252;
-  --foreground-tertiary: #737373;
+  /* 前景颜色 - WCAG 2.1 AA 兼容 (对比度 ≥ 4.5:1) */
+  --foreground: #1a1a1a;
+  --foreground-secondary: #4a4a4a;
+  --foreground-tertiary: #6b6b6b;
   
   /* 边框颜色 */
   --border: #e5e5e5;
@@ -36,10 +36,10 @@
   --background-secondary: #171717;
   --background-tertiary: #262626;
   
-  /* 前景颜色 */
-  --foreground: #ededed;
-  --foreground-secondary: #a3a3a3;
-  --foreground-tertiary: #737373;
+  /* 前景颜色 - WCAG 2.1 AA 兼容 (对比度 ≥ 4.5:1) */
+  --foreground: #f5f5f5;
+  --foreground-secondary: #b8b8b8;
+  --foreground-tertiary: #8a8a8a;
   
   /* 边框颜色 */
   --border: #262626;
@@ -133,10 +133,62 @@ body {
   }
 }
 
-/* 焦点样式 */
+/* 焦点样式 - WCAG 2.1 AA 兼容 */
 :focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 3px solid var(--primary);
   outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 增强按钮和交互元素的焦点样式 */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+[role="link"]:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(24, 144, 255, 0.2);
+}
+
+/* 卡片焦点样式 */
+.link-card:focus-within,
+.ant-card:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(24, 144, 255, 0.2);
+}
+
+/* 跳过导航链接（屏幕阅读器支持） */
+.skip-to-content {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--primary);
+  color: white;
+  padding: 8px 16px;
+  text-decoration: none;
+  z-index: 100;
+  border-radius: 0 0 4px 0;
+}
+
+.skip-to-content:focus {
+  top: 0;
+}
+
+/* 屏幕阅读器专用文本 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 
 /* 选择文本样式 */

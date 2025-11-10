@@ -129,14 +129,17 @@ export default function SearchBar() {
   }, [handleSearch, inputValue]);
 
   return (
-    <div className="w-full max-w-2xl">
+    <div className="w-full max-w-2xl" role="search" aria-label="搜索导航">
       <Space.Compact size="large" className="w-full">
         {/* 搜索引擎切换按钮 */}
         <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomLeft">
           <Button
             icon={getEngineIcon(currentEngine.icon)}
-            aria-label="选择搜索引擎"
+            aria-label={`当前搜索引擎：${currentEngine.name}，点击切换搜索引擎`}
+            aria-haspopup="menu"
+            aria-expanded={false}
             className="flex items-center justify-center"
+            title={`当前搜索引擎：${currentEngine.name}`}
           />
         </Dropdown>
 
@@ -147,18 +150,25 @@ export default function SearchBar() {
           onChange={handleInputChange}
           onKeyPress={handleKeyPress}
           allowClear
-          prefix={<SearchOutlined className="text-gray-400" />}
+          prefix={<SearchOutlined className="text-gray-400" aria-hidden="true" />}
           className="search-bar flex-1"
+          aria-label="搜索输入框"
+          role="searchbox"
+          aria-describedby="search-description"
         />
 
         {/* 搜索按钮 */}
         <Button
           type="primary"
-          icon={<SearchOutlined />}
+          icon={<SearchOutlined aria-hidden="true" />}
           onClick={() => handleSearch(inputValue)}
-          aria-label="搜索"
+          aria-label={`使用 ${currentEngine.name} 搜索`}
+          title={`使用 ${currentEngine.name} 搜索`}
         />
       </Space.Compact>
+      <span id="search-description" className="sr-only">
+        输入关键词进行站内搜索，或按回车键使用外部搜索引擎搜索
+      </span>
     </div>
   );
 }

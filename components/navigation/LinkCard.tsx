@@ -16,13 +16,13 @@ const IconWithFallback: React.FC<{ src: string; alt: string }> = ({ src, alt }) 
   if (hasError) {
     // 显示默认图标
     const DefaultIcon = AntdIcons.LinkOutlined;
-    return <DefaultIcon style={{ fontSize: 48 }} />;
+    return <DefaultIcon style={{ fontSize: 48 }} aria-label={`${alt}的默认图标`} />;
   }
 
   return (
     <img 
       src={src} 
-      alt={alt}
+      alt={`${alt}的图标`}
       loading="lazy"
       style={{ width: 48, height: 48, objectFit: 'contain' }}
       onError={() => {
@@ -127,10 +127,21 @@ const LinkCardBase: React.FC<LinkCardProps> = ({ link, onEdit, onDelete }) => {
         }}
         style={{ height: '100%' }}
         onContextMenu={handleContextMenu}
+        role="article"
+        aria-label={`导航链接：${link.name}`}
       >
         <Card
           hoverable
           onClick={handleClick}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleClick();
+            }
+          }}
+          tabIndex={0}
+          role="button"
+          aria-label={`打开 ${link.name}${link.description ? `，${link.description}` : ''}`}
           style={{
             height: 120,
             backgroundColor: link.backgroundColor || '#ffffff',
@@ -157,12 +168,15 @@ const LinkCardBase: React.FC<LinkCardProps> = ({ link, onEdit, onDelete }) => {
           width: '100%'
         }}>
           {/* 图标 */}
-          <div style={{ 
-            color: 'inherit',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
+          <div 
+            style={{ 
+              color: 'inherit',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            aria-hidden="true"
+          >
             {renderIcon}
           </div>
           

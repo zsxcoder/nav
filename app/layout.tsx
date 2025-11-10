@@ -23,6 +23,9 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <body className="antialiased">
+        <a href="#main-content" className="skip-to-content">
+          跳转到主内容
+        </a>
         <Providers>
           {children}
         </Providers>

@@ -54,8 +54,8 @@ export const ResetDataModal: React.FC<ResetDataModalProps> = ({
       open={open}
       title={
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <ExclamationCircleOutlined style={{ color: '#ff4d4f', fontSize: '20px' }} />
-          <span>重置所有数据</span>
+          <ExclamationCircleOutlined style={{ color: '#ff4d4f', fontSize: '20px' }} aria-hidden="true" />
+          <span id="reset-modal-title">重置所有数据</span>
         </div>
       }
       onOk={handleOk}
@@ -67,19 +67,24 @@ export const ResetDataModal: React.FC<ResetDataModalProps> = ({
         danger: true,
         disabled: !isConfirmValid,
         loading,
+        'aria-label': '确认重置所有数据',
       }}
-      cancelButtonProps={{ disabled: loading }}
+      cancelButtonProps={{ disabled: loading, 'aria-label': '取消重置操作' }}
       closable={!loading}
       maskClosable={!loading}
       keyboard={!loading}
       width={500}
+      aria-labelledby="reset-modal-title"
+      aria-describedby="reset-modal-description"
     >
-      <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+      <Space direction="vertical" size="middle" style={{ width: '100%' }} id="reset-modal-description">
         <Alert
           message="警告：此操作不可撤销"
           description="重置数据将删除所有自定义链接和设置，并恢复到默认状态。"
           type="warning"
           showIcon
+          role="alert"
+          aria-live="polite"
         />
 
         <div>
@@ -105,9 +110,18 @@ export const ResetDataModal: React.FC<ResetDataModalProps> = ({
             disabled={loading}
             status={confirmText && !isConfirmValid ? 'error' : undefined}
             autoFocus
+            aria-label="确认文本输入框"
+            aria-required="true"
+            aria-invalid={confirmText && !isConfirmValid}
+            aria-describedby="confirm-text-error"
           />
           {confirmText && !isConfirmValid && (
-            <Text type="danger" style={{ fontSize: '12px', marginTop: '4px', display: 'block' }}>
+            <Text 
+              type="danger" 
+              style={{ fontSize: '12px', marginTop: '4px', display: 'block' }}
+              id="confirm-text-error"
+              role="alert"
+            >
               请输入正确的确认文本
             </Text>
           )}

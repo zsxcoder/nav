@@ -154,12 +154,13 @@ export default function ManagePage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto px-4 py-8">
         {/* 页头 */}
-        <div className="mb-6">
+        <header className="mb-6" role="banner">
           <Space direction="vertical" size="small" className="w-full">
             <Button
-              icon={<ArrowLeftOutlined />}
+              icon={<ArrowLeftOutlined aria-hidden="true" />}
               onClick={handleBack}
               type="text"
+              aria-label="返回主页"
             >
               返回主页
             </Button>
@@ -169,14 +170,15 @@ export default function ManagePage() {
               </Title>
               <Button
                 type="primary"
-                icon={<PlusOutlined />}
+                icon={<PlusOutlined aria-hidden="true" />}
                 onClick={handleAddNew}
+                aria-label="添加新链接"
               >
                 添加链接
               </Button>
             </div>
           </Space>
-        </div>
+        </header>
 
         {/* 导入导出工具栏 */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-4">

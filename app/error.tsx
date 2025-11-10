@@ -21,13 +21,17 @@ export default function Error({
   }, [error]);
 
   return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      padding: '24px',
-    }}>
+    <div 
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        padding: '24px',
+      }}
+      role="alert"
+      aria-live="assertive"
+    >
       <Result
         status="error"
         title="出错了"
@@ -36,15 +40,17 @@ export default function Error({
           <Button
             key="retry"
             type="primary"
-            icon={<ReloadOutlined />}
+            icon={<ReloadOutlined aria-hidden="true" />}
             onClick={reset}
+            aria-label="重新加载页面"
           >
             重新加载
           </Button>,
           <Button
             key="home"
-            icon={<HomeOutlined />}
+            icon={<HomeOutlined aria-hidden="true" />}
             onClick={() => window.location.href = '/'}
+            aria-label="返回主页"
           >
             返回主页
           </Button>,

@@ -218,8 +218,8 @@ export const DataTable: React.FC<DataTableProps> = ({
   return (
     <div className="space-y-4">
       {/* 批量操作工具栏 */}
-      <div className="flex justify-between items-center">
-        <div className="text-sm text-gray-600">
+      <div className="flex justify-between items-center" role="toolbar" aria-label="批量操作工具栏">
+        <div className="text-sm text-gray-600" role="status" aria-live="polite">
           {selectedRowKeys.length > 0 && (
             <span>已选择 {selectedRowKeys.length} 项</span>
           )}
@@ -232,7 +232,9 @@ export const DataTable: React.FC<DataTableProps> = ({
               okText="确定"
               cancelText="取消"
             >
-              <Button danger>批量删除</Button>
+              <Button danger aria-label={`批量删除选中的 ${selectedRowKeys.length} 个链接`}>
+                批量删除
+              </Button>
             </Popconfirm>
           )}
         </Space>

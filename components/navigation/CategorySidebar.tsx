@@ -48,7 +48,12 @@ const CategorySidebarBase: React.FC<CategorySidebarProps> = ({ className, style 
   })), []);
 
   return (
-    <div className={className} style={style}>
+    <nav 
+      className={className} 
+      style={style}
+      role="navigation"
+      aria-label="分类导航"
+    >
       <Menu
         mode="inline"
         selectedKeys={[currentCategory]}
@@ -58,8 +63,9 @@ const CategorySidebarBase: React.FC<CategorySidebarProps> = ({ className, style 
           height: '100%',
           borderRight: 0,
         }}
+        aria-label="导航链接分类列表"
       />
-    </div>
+    </nav>
   );
 };
 

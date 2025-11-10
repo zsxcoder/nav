@@ -131,11 +131,20 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
       cancelText="取消"
       width={600}
       destroyOnHidden
+      aria-labelledby="edit-link-modal-title"
+      aria-describedby="edit-link-modal-description"
     >
+      <span id="edit-link-modal-title" className="sr-only">
+        {link ? '编辑链接表单' : '添加新链接表单'}
+      </span>
+      <span id="edit-link-modal-description" className="sr-only">
+        填写表单以{link ? '编辑' : '添加'}导航链接信息
+      </span>
       <Form
         form={form}
         layout="vertical"
         autoComplete="off"
+        aria-label={link ? '编辑链接表单' : '添加链接表单'}
       >
         <Form.Item
           label="地址"

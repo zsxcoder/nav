@@ -149,12 +149,20 @@ export default function Home() {
       {/* 主内容区域 */}
       <div className="flex-1 flex overflow-hidden">
         {/* 左侧分类导航 - Desktop */}
-        <aside className="hidden lg:block w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto transition-theme">
+        <aside 
+          className="hidden lg:block w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto transition-theme"
+          aria-label="分类导航侧边栏"
+        >
           <CategorySidebar />
         </aside>
 
         {/* 右侧内容区域 */}
-        <main className="flex-1 overflow-y-auto">
+        <main 
+          id="main-content" 
+          className="flex-1 overflow-y-auto"
+          role="main"
+          aria-label="导航链接主内容区"
+        >
           {isLoading ? (
             <LinkGridSkeleton />
           ) : (
@@ -173,6 +181,7 @@ export default function Home() {
         onClose={() => setDrawerOpen(false)}
         open={drawerOpen}
         width={280}
+        aria-label="移动端分类导航菜单"
         className="lg:hidden"
       >
         <CategorySidebar />
@@ -182,21 +191,24 @@ export default function Home() {
       <FloatButton.Group
         shape="circle"
         style={{ right: 24, bottom: 24 }}
+        aria-label="快捷操作"
       >
         {/* 移动端菜单按钮 */}
         <FloatButton
-          icon={<MenuOutlined />}
+          icon={<MenuOutlined aria-hidden="true" />}
           tooltip="分类菜单"
           onClick={() => setDrawerOpen(true)}
           className="lg:hidden"
+          aria-label="打开分类菜单"
         />
         
         {/* 添加链接按钮 */}
         <FloatButton
-          icon={<PlusOutlined />}
+          icon={<PlusOutlined aria-hidden="true" />}
           type="primary"
           tooltip="添加链接"
           onClick={handleAddClick}
+          aria-label="添加新链接"
         />
       </FloatButton.Group>
 

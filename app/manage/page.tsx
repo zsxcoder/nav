@@ -5,11 +5,14 @@ import { Button, Space, Typography, message } from 'antd';
 import { PlusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { addLink, updateLink, deleteLink, reorderLinks } from '@/store/slices/linksSlice';
+import { addLink, updateLink, deleteLink, reorderLinks, resetLinks } from '@/store/slices/linksSlice';
 import { DataTable } from '@/components/management/DataTable';
 import { EditLinkModal } from '@/components/modals/EditLinkModal';
 import { ImportExport } from '@/components/management/ImportExport';
+import { ResetDataModal } from '@/components/modals/ResetDataModal';
 import { Link } from '@/types/link';
+import { defaultLinks } from '@/services/defaultData';
+import { storageService } from '@/services/storage';
 
 const { Title } = Typography;
 
@@ -24,6 +27,7 @@ export default function ManagePage() {
 
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [currentLink, setCurrentLink] = useState<Link | null>(null);
+  const [resetModalOpen, setResetModalOpen] = useState(false);
 
   // 处理编辑链接
   const handleEdit = (link: Link) => {
@@ -82,6 +86,49 @@ export default function ManagePage() {
     router.push('/');
   };
 
+  // 打开重置确认对话框
+  const handleResetClick = () => {
+    setResetModalOpen(true);
+  };
+
+  // 处理数据重置
+  const handleResetConfirm = async () => {
+    try {
+      // 清除 LocalStorage
+      const cleared = storageService.clear();
+      
+      if (!cleared) {
+        message.error('清除数据失败，请检查浏览器设置');
+        return;
+      }
+
+      // 重置 Redux store 为默认数据
+      dispatch(resetLinks(defaultLinks));
+
+      // 保存默认数据到 LocalStorage
+      storageService.saveLinks(defaultLinks);
+
+      // 关闭对话框
+      setResetModalOpen(false);
+
+      // 显示成功提示
+      message.success('数据已重置为默认状态');
+
+      // 延迟刷新页面以确保用户看到成功提示
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (error) {
+      console.error('Reset data error:', error);
+      message.error('重置数据时发生错误');
+    }
+  };
+
+  // 取消重置
+  const handleResetCancel = () => {
+    setResetModalOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto px-4 py-8">
@@ -112,7 +159,15 @@ export default function ManagePage() {
 
         {/* 导入导出工具栏 */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-4">
-          <ImportExport />
+          <div className="flex justify-between items-center">
+            <ImportExport />
+            <Button
+              danger
+              onClick={handleResetClick}
+            >
+              重置数据
+            </Button>
+          </div>
         </div>
 
         {/* 数据表格 */}
@@ -132,6 +187,13 @@ export default function ManagePage() {
           link={currentLink}
           onCancel={handleModalCancel}
           onSubmit={handleModalSubmit}
+        />
+
+        {/* 重置数据确认对话框 */}
+        <ResetDataModal
+          open={resetModalOpen}
+          onConfirm={handleResetConfirm}
+          onCancel={handleResetCancel}
         />
       </div>
     </div>

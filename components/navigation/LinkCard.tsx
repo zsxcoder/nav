@@ -116,13 +116,15 @@ export const LinkCard: React.FC<LinkCardProps> = ({ link, onEdit, onDelete }) =>
             cursor: 'pointer',
             overflow: 'hidden',
           }}
-          bodyStyle={{
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px',
+          styles={{
+            body: {
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '16px',
+            }
           }}
           className="link-card"
         >

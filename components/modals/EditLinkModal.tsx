@@ -122,7 +122,7 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
       okText="确定"
       cancelText="取消"
       width={600}
-      destroyOnClose
+      destroyOnHidden
     >
       <Form
         form={form}

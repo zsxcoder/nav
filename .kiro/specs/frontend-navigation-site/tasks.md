@@ -120,7 +120,7 @@
   - 渲染 LinkCard 组件列表
   - _需求: 1.1, 1.2, 1.3, 1.4, 2.4_
 
-- [ ] 15. 实现主页面
+- [x] 15. 实现主页面
   - 创建 `app/page.tsx` 主页组件
   - 实现左右布局：左侧 CategorySidebar，右侧内容区域（Header + LinkGrid）
   - 集成 Header、CategorySidebar 和 LinkGrid 组件

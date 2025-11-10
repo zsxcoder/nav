@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import Providers from '@/components/Providers';
+import '@ant-design/v5-patch-for-react-19';
 
 export const metadata: Metadata = {
   title: '前端导航网站',

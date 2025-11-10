@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback, useMemo, memo } from 'react';
 import { Menu } from 'antd';
 import type { MenuProps } from 'antd';
 import * as AntdIcons from '@ant-design/icons';
@@ -29,22 +29,23 @@ interface CategorySidebarProps {
 /**
  * CategorySidebar 组件
  * 左侧分类导航组件，显示分类列表并支持切换
+ * 使用 React.memo 优化避免不必要的重渲染
  */
-export const CategorySidebar: React.FC<CategorySidebarProps> = ({ className, style }) => {
+const CategorySidebarBase: React.FC<CategorySidebarProps> = ({ className, style }) => {
   const dispatch = useAppDispatch();
   const currentCategory = useAppSelector((state) => state.settings.currentCategory || '主页');
 
-  // 处理分类切换
-  const handleCategoryChange: MenuProps['onClick'] = (e) => {
+  // 使用 useCallback 缓存事件处理函数
+  const handleCategoryChange: MenuProps['onClick'] = useCallback((e: { key: string }) => {
     dispatch(setCurrentCategory(e.key));
-  };
+  }, [dispatch]);
 
-  // 构建菜单项
-  const menuItems: MenuProps['items'] = CATEGORIES.map((category) => ({
+  // 使用 useMemo 缓存菜单项
+  const menuItems: MenuProps['items'] = useMemo(() => CATEGORIES.map((category) => ({
     key: category.key,
     icon: category.icon,
     label: category.label,
-  }));
+  })), []);
 
   return (
     <div className={className} style={style}>
@@ -62,4 +63,10 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({ className, sty
   );
 };
 
+// 使用 React.memo 优化组件
+const CategorySidebar = memo(CategorySidebarBase);
+
+CategorySidebar.displayName = 'CategorySidebar';
+
+export { CategorySidebar };
 export default CategorySidebar;

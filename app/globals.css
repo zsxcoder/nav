@@ -66,7 +66,7 @@ body {
   overflow-x: hidden;
 }
 
-/* 主题过渡动画 */
+/* 主题过渡动画 - 优化性能 */
 * {
   transition-property: background-color, border-color, color, fill, stroke, box-shadow;
   transition-duration: var(--transition-duration);
@@ -77,6 +77,22 @@ body {
 *:before,
 *:after {
   transition-property: background-color, border-color, color, fill, stroke;
+}
+
+/* 性能优化：使用 GPU 加速 */
+.link-card,
+.ant-card,
+.ant-btn,
+.ant-input {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* 减少重绘和回流 */
+.link-card img {
+  content-visibility: auto;
+  contain: layout style paint;
 }
 
 /* 滚动条样式 */

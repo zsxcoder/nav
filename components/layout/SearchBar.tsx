@@ -41,23 +41,25 @@ export default function SearchBar() {
     setInputValue(searchQuery);
   }, [searchQuery]);
 
+  // 使用 useCallback 缓存事件处理函数
+  
   /**
    * 处理输入变化
    * 触发防抖搜索
    */
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setInputValue(value);
     
     // 触发防抖搜索
     dispatch(performDebouncedSearch(value));
-  };
+  }, [dispatch]);
 
   /**
    * 处理回车键
    * 在新标签页打开外部搜索引擎
    */
-  const handleSearch = (value: string) => {
+  const handleSearch = React.useCallback((value: string) => {
     const trimmedValue = value.trim();
     
     if (trimmedValue) {
@@ -65,20 +67,20 @@ export default function SearchBar() {
       const searchUrl = getSearchUrl(currentEngineId, trimmedValue);
       window.open(searchUrl, '_blank', 'noopener,noreferrer');
     }
-  };
+  }, [currentEngineId]);
 
   /**
    * 清除搜索
    */
-  const handleClear = () => {
+  const handleClear = React.useCallback(() => {
     setInputValue('');
     dispatch(clearSearch());
-  };
+  }, [dispatch]);
 
   /**
    * 处理搜索引擎切换
    */
-  const handleEngineChange = (engineId: string) => {
+  const handleEngineChange = React.useCallback((engineId: string) => {
     dispatch(setSearchEngine(engineId));
     
     // 保存到 LocalStorage
@@ -87,12 +89,12 @@ export default function SearchBar() {
       searchEngine: engineId,
     };
     storageService.saveSettings(updatedSettings);
-  };
+  }, [dispatch, settings]);
 
   /**
-   * 构建搜索引擎下拉菜单
+   * 构建搜索引擎下拉菜单 - 使用 useMemo 缓存
    */
-  const menuItems: MenuProps['items'] = SEARCH_ENGINES.map((engine) => ({
+  const menuItems: MenuProps['items'] = React.useMemo(() => SEARCH_ENGINES.map((engine) => ({
     key: engine.id,
     label: (
       <Space>
@@ -101,7 +103,7 @@ export default function SearchBar() {
       </Space>
     ),
     onClick: () => handleEngineChange(engine.id),
-  }));
+  })), [handleEngineChange]);
 
   /**
    * 获取搜索引擎图标组件
@@ -118,13 +120,13 @@ export default function SearchBar() {
   }
 
   /**
-   * 处理键盘事件
+   * 处理键盘事件 - 使用 useCallback 缓存
    */
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyPress = React.useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSearch(inputValue);
     }
-  };
+  }, [handleSearch, inputValue]);
 
   return (
     <div className="w-full max-w-2xl">

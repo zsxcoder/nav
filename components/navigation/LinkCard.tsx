@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback, memo } from 'react';
 import { Card, Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
 import { motion } from 'framer-motion';
@@ -16,46 +16,52 @@ interface LinkCardProps {
 /**
  * LinkCard 组件
  * 显示单个导航链接的卡片，支持自定义图标、背景色和悬停动画
+ * 使用 React.memo 优化避免不必要的重渲染
  */
-export const LinkCard: React.FC<LinkCardProps> = ({ link, onEdit, onDelete }) => {
-  const handleClick = () => {
+const LinkCardBase: React.FC<LinkCardProps> = ({ link, onEdit, onDelete }) => {
+  // 使用 useCallback 缓存事件处理函数
+  const handleClick = useCallback(() => {
     // 在新标签页打开链接
     window.open(link.url, '_blank', 'noopener,noreferrer');
-  };
+  }, [link.url]);
 
-  const handleContextMenu = (e: React.MouseEvent) => {
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
     // 阻止默认浏览器右键菜单
     e.preventDefault();
     e.stopPropagation();
-  };
+  }, []);
 
-  // 右键菜单项
-  const menuItems: MenuProps['items'] = [
+  const handleEdit = useCallback(() => {
+    if (onEdit) {
+      onEdit(link);
+    }
+  }, [onEdit, link]);
+
+  const handleDelete = useCallback(() => {
+    if (onDelete) {
+      onDelete(link.id);
+    }
+  }, [onDelete, link.id]);
+
+  // 右键菜单项 - 使用 useMemo 缓存
+  const menuItems: MenuProps['items'] = React.useMemo(() => [
     {
       key: 'edit',
       label: '编辑',
       icon: <AntdIcons.EditOutlined />,
-      onClick: () => {
-        if (onEdit) {
-          onEdit(link);
-        }
-      },
+      onClick: handleEdit,
     },
     {
       key: 'delete',
       label: '删除',
       icon: <AntdIcons.DeleteOutlined />,
       danger: true,
-      onClick: () => {
-        if (onDelete) {
-          onDelete(link.id);
-        }
-      },
+      onClick: handleDelete,
     },
-  ];
+  ], [handleEdit, handleDelete]);
 
-  // 渲染图标
-  const renderIcon = () => {
+  // 渲染图标 - 使用 useMemo 缓存
+  const renderIcon = React.useMemo(() => {
     if (!link.icon) {
       // 默认图标
       const DefaultIcon = AntdIcons.LinkOutlined;
@@ -68,6 +74,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({ link, onEdit, onDelete }) =>
         <img 
           src={link.icon} 
           alt={link.name}
+          loading="lazy"
           style={{ width: 48, height: 48, objectFit: 'contain' }}
           onError={(e) => {
             // 图片加载失败时显示默认图标
@@ -92,7 +99,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({ link, onEdit, onDelete }) =>
     // 如果图标名称无效，显示默认图标
     const DefaultIcon = AntdIcons.LinkOutlined;
     return <DefaultIcon style={{ fontSize: 48 }} />;
-  };
+  }, [link.icon, link.name]);
 
   return (
     <Dropdown
@@ -142,7 +149,7 @@ export const LinkCard: React.FC<LinkCardProps> = ({ link, onEdit, onDelete }) =>
             alignItems: 'center',
             justifyContent: 'center'
           }}>
-            {renderIcon()}
+            {renderIcon}
           </div>
           
           {/* 名称 */}
@@ -181,4 +188,22 @@ export const LinkCard: React.FC<LinkCardProps> = ({ link, onEdit, onDelete }) =>
   );
 };
 
+// 使用 React.memo 优化组件，只在 props 变化时重新渲染
+const LinkCard = memo(LinkCardBase, (prevProps, nextProps) => {
+  // 自定义比较函数：只比较关键属性
+  return (
+    prevProps.link.id === nextProps.link.id &&
+    prevProps.link.name === nextProps.link.name &&
+    prevProps.link.url === nextProps.link.url &&
+    prevProps.link.description === nextProps.link.description &&
+    prevProps.link.icon === nextProps.link.icon &&
+    prevProps.link.backgroundColor === nextProps.link.backgroundColor &&
+    prevProps.onEdit === nextProps.onEdit &&
+    prevProps.onDelete === nextProps.onDelete
+  );
+});
+
+LinkCard.displayName = 'LinkCard';
+
+export { LinkCard };
 export default LinkCard;

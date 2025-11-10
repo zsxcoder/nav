@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { FloatButton, message, Drawer } from 'antd';
 import { PlusOutlined, MenuOutlined } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
@@ -8,10 +8,11 @@ import { addLink, updateLink, deleteLink, loadLinks } from '@/store/slices/links
 import { storageService } from '@/services/storage';
 import { defaultLinks } from '@/services/defaultData';
 import Header from '@/components/layout/Header';
-import CategorySidebar from '@/components/navigation/CategorySidebar';
-import LinkGrid from '@/components/navigation/LinkGrid';
-import EditLinkModal from '@/components/modals/EditLinkModal';
-import ConfirmModal from '@/components/modals/ConfirmModal';
+import { CategorySidebar } from '@/components/navigation/CategorySidebar';
+import { LinkGrid } from '@/components/navigation/LinkGrid';
+import { LinkGridSkeleton } from '@/components/navigation/LinkGridSkeleton';
+import { EditLinkModal } from '@/components/modals/EditLinkModal';
+import { ConfirmModal } from '@/components/modals/ConfirmModal';
 import { Link } from '@/types/link';
 
 /**
@@ -35,6 +36,9 @@ export default function Home() {
   // 移动端侧边栏抽屉状态
   const [drawerOpen, setDrawerOpen] = useState(false);
   
+  // 加载状态
+  const [isLoading, setIsLoading] = useState(true);
+  
   // 页面加载时从 Redux store 加载链接数据
   useEffect(() => {
     // 如果 store 中没有数据，尝试从 LocalStorage 加载
@@ -47,28 +51,32 @@ export default function Home() {
         dispatch(loadLinks(defaultLinks));
       }
     }
+    // 设置加载完成
+    setIsLoading(false);
   }, [dispatch, links.length]);
 
+  // 使用 useCallback 缓存事件处理函数，避免子组件不必要的重渲染
+  
   // 处理添加链接按钮点击
-  const handleAddClick = () => {
+  const handleAddClick = useCallback(() => {
     setEditingLink(null);
     setEditModalOpen(true);
-  };
+  }, []);
 
   // 处理编辑链接
-  const handleEdit = (link: Link) => {
+  const handleEdit = useCallback((link: Link) => {
     setEditingLink(link);
     setEditModalOpen(true);
-  };
+  }, []);
 
   // 处理删除链接
-  const handleDelete = (id: string) => {
+  const handleDelete = useCallback((id: string) => {
     setDeletingLinkId(id);
     setDeleteModalOpen(true);
-  };
+  }, []);
 
   // 处理编辑弹窗提交
-  const handleEditSubmit = (linkData: Partial<Link>) => {
+  const handleEditSubmit = useCallback((linkData: Partial<Link>) => {
     try {
       if (editingLink) {
         // 更新现有链接
@@ -88,16 +96,16 @@ export default function Home() {
       console.error('保存链接失败:', error);
       message.error('保存链接失败，请重试');
     }
-  };
+  }, [dispatch, editingLink]);
 
   // 处理编辑弹窗取消
-  const handleEditCancel = () => {
+  const handleEditCancel = useCallback(() => {
     setEditModalOpen(false);
     setEditingLink(null);
-  };
+  }, []);
 
   // 处理删除确认
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = useCallback(() => {
     if (deletingLinkId) {
       try {
         dispatch(deleteLink(deletingLinkId));
@@ -109,18 +117,21 @@ export default function Home() {
         message.error('删除链接失败，请重试');
       }
     }
-  };
+  }, [dispatch, deletingLinkId]);
 
   // 处理删除取消
-  const handleDeleteCancel = () => {
+  const handleDeleteCancel = useCallback(() => {
     setDeleteModalOpen(false);
     setDeletingLinkId(null);
-  };
+  }, []);
 
-  // 获取要删除的链接名称
-  const deletingLinkName = deletingLinkId
-    ? links.find(link => link.id === deletingLinkId)?.name
-    : '';
+  // 获取要删除的链接名称 - 使用 useMemo 缓存
+  const deletingLinkName = React.useMemo(() => 
+    deletingLinkId
+      ? links.find(link => link.id === deletingLinkId)?.name
+      : '',
+    [deletingLinkId, links]
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 transition-theme">
@@ -136,10 +147,14 @@ export default function Home() {
 
         {/* 右侧内容区域 */}
         <main className="flex-1 overflow-y-auto">
-          <LinkGrid
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
+          {isLoading ? (
+            <LinkGridSkeleton />
+          ) : (
+            <LinkGrid
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          )}
         </main>
       </div>
 

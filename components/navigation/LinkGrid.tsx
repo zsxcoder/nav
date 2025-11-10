@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, memo } from 'react';
 import { Empty } from 'antd';
 import { useAppSelector } from '@/store/hooks';
 import { LinkCard } from './LinkCard';
@@ -17,8 +17,9 @@ interface LinkGridProps {
  * LinkGrid 组件
  * 响应式网格布局显示链接卡片
  * 支持根据分类和搜索状态过滤链接
+ * 使用 React.memo 和 useMemo 优化性能
  */
-export const LinkGrid: React.FC<LinkGridProps> = ({ 
+const LinkGridBase: React.FC<LinkGridProps> = ({ 
   onEdit, 
   onDelete,
   className,
@@ -100,4 +101,10 @@ export const LinkGrid: React.FC<LinkGridProps> = ({
   );
 };
 
+// 使用 React.memo 优化组件
+const LinkGrid = memo(LinkGridBase);
+
+LinkGrid.displayName = 'LinkGrid';
+
+export { LinkGrid };
 export default LinkGrid;

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { memo } from 'react';
 import SearchBar from './SearchBar';
 import ThemeToggle from './ThemeToggle';
 
@@ -14,15 +14,17 @@ import ThemeToggle from './ThemeToggle';
  * 响应式设计：
  * - Desktop: 水平布局，搜索栏居中
  * - Mobile: 垂直布局，搜索栏全宽
+ * 
+ * 使用 React.memo 优化避免不必要的重渲染
  */
-export default function Header() {
+const Header = memo(function Header() {
   return (
     <header className="w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 transition-theme">
       <div className="container mx-auto px-4 py-4">
         {/* Desktop 布局 */}
         <div className="hidden md:flex items-center justify-between gap-6">
           {/* Logo/标题 */}
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <h1 className="text-xl font-bold text-gray-900 dark:text-white whitespace-nowrap">
               前端导航
             </h1>
@@ -34,7 +36,7 @@ export default function Header() {
           </div>
 
           {/* 主题切换 */}
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <ThemeToggle />
           </div>
         </div>
@@ -57,4 +59,8 @@ export default function Header() {
       </div>
     </header>
   );
-}
+});
+
+Header.displayName = 'Header';
+
+export default Header;

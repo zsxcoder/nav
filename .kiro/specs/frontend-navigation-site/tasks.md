@@ -24,7 +24,7 @@
   - 实现图标获取函数，支持根据 URL 自动获取网站 favicon
   - _需求: 6.1, 6.2, 6.3, 6.4_
 
-- [ ] 4. 配置 Redux 状态管理
+- [x] 4. 配置 Redux 状态管理
   - 创建 `store/index.ts` 配置 Redux store
   - 创建 `store/slices/linksSlice.ts` 管理链接数据（actions: addLink, updateLink, deleteLink, reorderLinks, loadLinks, resetLinks）
   - 创建 `store/slices/searchSlice.ts` 管理搜索状态（actions: setQuery, setResults, clearSearch）

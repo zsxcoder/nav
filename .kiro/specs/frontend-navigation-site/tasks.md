@@ -33,7 +33,7 @@
   - 创建 `store/hooks.ts` 导出类型化的 useAppDispatch 和 useAppSelector hooks
   - _需求: 6.2, 6.5_
 
-- [ ] 5. 实现搜索功能服务
+- [x] 5. 实现搜索功能服务
   - 创建 `services/search.ts` 实现搜索算法
   - 实现 `searchLinks` 函数支持名称、描述、URL、标签的模糊匹配
   - 创建 `utils/debounce.ts` 实现防抖工具函数

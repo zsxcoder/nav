@@ -1,5 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Link } from '@/types';
+import { searchLinks } from '@/services/search';
+import { debounce } from '@/utils/debounce';
+import type { AppDispatch, RootState } from '../index';
 
 /**
  * Search 状态接口
@@ -72,6 +75,79 @@ export const {
   clearSearch,
   setSearching,
 } = searchSlice.actions;
+
+/**
+ * 防抖搜索函数（300ms 延迟）
+ * 内部实现，用于延迟执行搜索
+ */
+const debouncedSearchImpl = debounce((
+  dispatch: AppDispatch,
+  getState: () => RootState,
+  query: string
+) => {
+  const state = getState();
+  const links = state.links.items;
+  
+  // 执行搜索
+  const results = searchLinks(links, query);
+  
+  // 更新搜索结果
+  dispatch(setResults(results));
+  dispatch(setSearching(false));
+}, 300);
+
+/**
+ * 执行防抖搜索
+ * Thunk action，带 300ms 防抖延迟
+ * 
+ * @param query - 搜索关键词
+ */
+export const performDebouncedSearch = (query: string) => {
+  return (dispatch: AppDispatch, getState: () => RootState) => {
+    // 立即更新查询和搜索状态
+    dispatch(setQuery(query));
+    
+    // 如果查询为空，立即清除结果
+    if (!query.trim()) {
+      dispatch(setResults([]));
+      dispatch(setSearching(false));
+      return;
+    }
+    
+    // 设置搜索中状态
+    dispatch(setSearching(true));
+    
+    // 执行防抖搜索
+    debouncedSearchImpl(dispatch, getState, query);
+  };
+};
+
+/**
+ * 立即执行搜索（不防抖）
+ * 用于需要立即获取结果的场景
+ * 
+ * @param query - 搜索关键词
+ */
+export const performImmediateSearch = (query: string) => {
+  return (dispatch: AppDispatch, getState: () => RootState) => {
+    dispatch(setQuery(query));
+    
+    if (!query.trim()) {
+      dispatch(setResults([]));
+      dispatch(setSearching(false));
+      return;
+    }
+    
+    dispatch(setSearching(true));
+    
+    const state = getState();
+    const links = state.links.items;
+    const results = searchLinks(links, query);
+    
+    dispatch(setResults(results));
+    dispatch(setSearching(false));
+  };
+};
 
 /**
  * 导出 reducer

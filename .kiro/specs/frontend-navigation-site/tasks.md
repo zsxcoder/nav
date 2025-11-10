@@ -131,7 +131,7 @@
   - 实现响应式布局：移动端隐藏或折叠侧边栏
   - _需求: 4.6, 4.7, 6.4, 9.6_
 
-- [ ] 16. 实现数据管理页面
+- [x] 16. 实现数据管理页面
   - 创建 `app/manage/page.tsx` 数据管理页面
   - 创建 `components/management/DataTable.tsx` 数据表格组件
   - 使用 Ant Design Table 组件显示所有链接

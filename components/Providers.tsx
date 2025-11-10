@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { Provider } from 'react-redux';
-import { ConfigProvider, theme as antdTheme } from 'antd';
+import { ConfigProvider, theme as antdTheme, App } from 'antd';
 import { ThemeProvider, useTheme } from 'next-themes';
 import zhCN from 'antd/locale/zh_CN';
 import store, { initializeStore } from '@/store';
@@ -41,7 +41,9 @@ function AntdThemeProvider({ children }: { children: React.ReactNode }) {
         },
       }}
     >
-      {children}
+      <App>
+        {children}
+      </App>
     </ConfigProvider>
   );
 }

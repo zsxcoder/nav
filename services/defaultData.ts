@@ -46,7 +46,7 @@ export const defaultLinks: Link[] = [
     'https://github.com',
     '全球最大的代码托管平台',
     '主页',
-    '#24292e',
+    '#cbcbcb',
     ['代码', '开源', 'Git']
   ),
   createLink(
@@ -54,7 +54,7 @@ export const defaultLinks: Link[] = [
     'https://stackoverflow.com',
     '程序员问答社区',
     '主页',
-    '#f48024',
+    '#f9d8bd',
     ['问答', '社区', '编程']
   ),
   createLink(
@@ -62,7 +62,7 @@ export const defaultLinks: Link[] = [
     'https://developer.mozilla.org',
     'Web 开发权威文档',
     '主页',
-    '#000000',
+    '#15131B',
     ['文档', 'Web', 'API']
   ),
   createLink(
@@ -70,7 +70,7 @@ export const defaultLinks: Link[] = [
     'https://www.npmjs.com',
     'Node.js 包管理器',
     '主页',
-    '#cb3837',
+    '#CB0200',
     ['包管理', 'Node.js', 'JavaScript']
   ),
 
@@ -88,7 +88,7 @@ export const defaultLinks: Link[] = [
     'https://www.figma.com',
     '协作式界面设计工具',
     '工作',
-    '#f24e1e',
+    '#2C2D35',
     ['设计', 'UI', '原型']
   ),
   createLink(
@@ -138,7 +138,7 @@ export const defaultLinks: Link[] = [
     'https://tailwindcss.com',
     '实用优先的 CSS 框架',
     '学习',
-    '#06b6d4',
+    '#35BEF9',
     ['CSS', '框架', '样式']
   ),
 
@@ -148,7 +148,7 @@ export const defaultLinks: Link[] = [
     'https://caniuse.com',
     '浏览器兼容性查询',
     '工具',
-    '#f4e04d',
+    '#F2E8D4',
     ['兼容性', '浏览器', 'CSS']
   ),
   createLink(
@@ -164,7 +164,7 @@ export const defaultLinks: Link[] = [
     'https://jsonformatter.org',
     'JSON 格式化和验证',
     '工具',
-    '#000000',
+    '#f5f5f5',
     ['JSON', '格式化', '工具']
   ),
   createLink(
@@ -172,7 +172,7 @@ export const defaultLinks: Link[] = [
     'https://codepen.io',
     '前端代码在线编辑器',
     '工具',
-    '#000000',
+    '#f5f5f5',
     ['编辑器', '在线', '前端']
   ),
 
@@ -182,7 +182,7 @@ export const defaultLinks: Link[] = [
     'https://dribbble.com',
     '设计师作品分享社区',
     '娱乐',
-    '#ea4c89',
+    '#FFABE7',
     ['设计', '灵感', 'UI']
   ),
   createLink(
@@ -190,7 +190,7 @@ export const defaultLinks: Link[] = [
     'https://www.behance.net',
     'Adobe 创意作品平台',
     '娱乐',
-    '#1769ff',
+    '#2756FF',
     ['设计', '作品', '创意']
   ),
   createLink(

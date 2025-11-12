@@ -33,8 +33,8 @@ const LinkGridBase: React.FC<LinkGridProps> = ({
 
   // 过滤显示的链接
   const displayedLinks = useMemo(() => {
-    // 如果正在搜索，显示搜索结果
-    if (isSearching && searchQuery.trim()) {
+    // 如果有搜索关键词，显示搜索结果
+    if (searchQuery.trim()) {
       return searchResults;
     }
 
@@ -46,12 +46,12 @@ const LinkGridBase: React.FC<LinkGridProps> = ({
 
     // 过滤指定分类的链接
     return links.filter((link) => link.category === currentCategory);
-  }, [links, currentCategory, searchQuery, searchResults, isSearching]);
+  }, [links, currentCategory, searchQuery, searchResults]);
 
   // 空状态判断
   const isEmpty = displayedLinks.length === 0;
-  const isSearchEmpty = isSearching && searchQuery.trim() && isEmpty;
-  const isCategoryEmpty = !isSearching && isEmpty;
+  const isSearchEmpty = searchQuery.trim() && isEmpty;
+  const isCategoryEmpty = !searchQuery.trim() && isEmpty;
 
   // 渲染空状态
   if (isEmpty) {
@@ -89,7 +89,7 @@ const LinkGridBase: React.FC<LinkGridProps> = ({
       className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 p-8 ${className || ''}`}
       style={style}
       role="region"
-      aria-label={isSearching ? `搜索结果：${displayedLinks.length} 个链接` : `${currentCategory}分类：${displayedLinks.length} 个链接`}
+      aria-label={searchQuery.trim() ? `搜索结果：${displayedLinks.length} 个链接` : `${currentCategory}分类：${displayedLinks.length} 个链接`}
     >
       {displayedLinks.map((link) => (
         <LinkCard

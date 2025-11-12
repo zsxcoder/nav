@@ -142,7 +142,7 @@ export default function Home() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 transition-theme">
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-(--background) transition-theme">
       {/* 页头组件 */}
       <Header />
       
@@ -150,10 +150,10 @@ export default function Home() {
       <div className="flex-1 flex overflow-hidden">
         {/* 左侧分类导航 - Desktop */}
         <aside 
-          className="hidden lg:block w-48 bg-white dark:bg-antd-dark border-r border-gray-200 dark:border-gray-700 overflow-y-auto transition-theme"
+          className="hidden lg:block w-48 bg-white dark:bg-antd-dark border-r border-gray-200 dark:border-neutral-700 overflow-y-auto transition-theme"
           aria-label="分类导航侧边栏"
         >
-          <CategorySidebar />
+          <CategorySidebar style={{height: '100%'}} />
         </aside>
 
         {/* 右侧内容区域 */}

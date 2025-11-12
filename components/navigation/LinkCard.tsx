@@ -199,7 +199,7 @@ const LinkCardBase: React.FC<LinkCardProps> = ({ link, onEdit, onDelete }) => {
           </div>
           
           {/* 右侧：名称 + 描述 */}
-          <div className="flex-1 flex flex-col justify-center p-4 bg-(--background) gap-1">
+          <div className="flex-1 flex flex-col justify-center p-4 bg-(--background-main) gap-1">
             {/* 名称 */}
             <div className="text-[15px] font-semibold text-(--foreground) overflow-hidden text-ellipsis whitespace-nowrap leading-snug">
               {link.name}

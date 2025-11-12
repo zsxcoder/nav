@@ -20,7 +20,7 @@ import ThemeToggle from './ThemeToggle';
 const Header = memo(function Header() {
   return (
     <header 
-      className="w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 transition-theme"
+      className="w-full bg-(--background-main) border-b border-gray-200 dark:border-neutral-700 transition-theme"
       role="banner"
     >
       <div className="container mx-auto px-4 py-4">

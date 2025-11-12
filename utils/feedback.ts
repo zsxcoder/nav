@@ -8,8 +8,9 @@ import { App } from 'antd';
  * 如果在组件外使用，请使用 useMessage hook
  */
 
-// 全局 message 实例（通过 App.useApp() 获取）
+// 全局 message 和 modal 实例（通过 App.useApp() 获取）
 let messageApi: ReturnType<typeof App.useApp>['message'] | null = null;
+let modalApi: ReturnType<typeof App.useApp>['modal'] | null = null;
 
 /**
  * 设置全局 message 实例
@@ -17,6 +18,14 @@ let messageApi: ReturnType<typeof App.useApp>['message'] | null = null;
  */
 export const setMessageApi = (api: ReturnType<typeof App.useApp>['message']) => {
   messageApi = api;
+};
+
+/**
+ * 设置全局 modal 实例
+ * 此函数应该在应用初始化时调用
+ */
+export const setModalApi = (api: ReturnType<typeof App.useApp>['modal']) => {
+  modalApi = api;
 };
 
 /**
@@ -37,6 +46,25 @@ const getMessageApi = () => {
     };
   }
   return messageApi;
+};
+
+/**
+ * 获取 modal 实例
+ * 如果未设置，返回一个空操作的 fallback
+ */
+const getModalApi = () => {
+  if (!modalApi) {
+    console.warn('Modal API not initialized. Please use MessageProvider or call setModalApi.');
+    // 返回一个 fallback，避免应用崩溃
+    return {
+      confirm: () => {},
+      info: () => {},
+      success: () => {},
+      error: () => {},
+      warning: () => {},
+    };
+  }
+  return modalApi;
 };
 
 /**
@@ -117,4 +145,11 @@ export const handleAsyncOperation = async <T>(
     showError(error instanceof Error ? error.message : errorMessage);
     return null;
   }
+};
+
+/**
+ * 显示确认对话框
+ */
+export const showConfirm = (config: Parameters<ReturnType<typeof App.useApp>['modal']['confirm']>[0]) => {
+  return getModalApi().confirm(config);
 };

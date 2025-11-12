@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button, Upload, Space, Modal } from 'antd';
+import { Button, Upload, Space } from 'antd';
 import { DownloadOutlined, UploadOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { loadLinks } from '@/store/slices/linksSlice';
 import { Link } from '@/types/link';
-import { showSuccess, showError, showWarning } from '@/utils/feedback';
+import { showSuccess, showError, showWarning, showConfirm } from '@/utils/feedback';
 
 /**
  * 验证链接数据格式
@@ -127,7 +127,14 @@ export const ImportExport: React.FC = () => {
       return;
     }
 
-    const file = fileList[0];
+    const uploadFile = fileList[0];
+    const file = uploadFile.originFileObj;
+    
+    if (!file) {
+      showError('无法读取文件，请重新选择');
+      return;
+    }
+
     const reader = new FileReader();
 
     reader.onload = (e) => {
@@ -160,7 +167,7 @@ export const ImportExport: React.FC = () => {
         }
 
         // 显示确认对话框
-        Modal.confirm({
+        showConfirm({
           title: '确认导入',
           icon: <ExclamationCircleOutlined />,
           content: `即将导入 ${data.length} 个链接，这将覆盖当前所有数据。是否继续？`,
@@ -193,7 +200,7 @@ export const ImportExport: React.FC = () => {
       showError('文件读取失败，请重试');
     };
 
-    reader.readAsText(file as any);
+    reader.readAsText(file);
   };
 
   /**

@@ -167,29 +167,21 @@ export default function ManagePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6">
         {/* 页头 */}
         <header className="mb-6" role="banner">
           <Space direction="vertical" size="small" className="w-full">
-            <Button
-              icon={<ArrowLeftOutlined aria-hidden="true" />}
-              onClick={handleBack}
-              type="text"
-              aria-label="返回主页"
-            >
-              返回主页
-            </Button>
             <div className="flex justify-between items-center">
               <Title level={2} className="mb-0!">
                 数据管理
               </Title>
               <Button
-                type="primary"
-                icon={<PlusOutlined aria-hidden="true" />}
-                onClick={handleAddNew}
-                aria-label="添加新链接"
+                icon={<ArrowLeftOutlined aria-hidden="true" />}
+                onClick={handleBack}
+                type="text"
+                aria-label="返回主页"
               >
-                添加链接
+                返回主页
               </Button>
             </div>
           </Space>
@@ -199,17 +191,27 @@ export default function ManagePage() {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-4">
           <div className="flex justify-between items-center">
             <ImportExport />
-            <Button
-              danger
-              onClick={handleResetClick}
-            >
-              重置数据
-            </Button>
+            <div className='flex gap-4'>
+              <Button
+                danger
+                onClick={handleResetClick}
+              >
+                重置数据
+              </Button>
+              <Button
+                type="primary"
+                icon={<PlusOutlined aria-hidden="true" />}
+                onClick={handleAddNew}
+                aria-label="添加新链接"
+              >
+                添加链接
+              </Button>
+            </div>
           </div>
         </div>
 
         {/* 数据表格 */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm px-4 pt-4">
           <DataTable
             links={links}
             onEdit={handleEdit}

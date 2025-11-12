@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, createContext, useContext } from 'react';
 import { Table, Button, Space, Popconfirm, Tag } from 'antd';
 import { EditOutlined, DeleteOutlined, DragOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
@@ -23,6 +23,12 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { Link } from '@/types/link';
 import { showSuccess, showWarning } from '@/utils/feedback';
+
+// 创建 Context 用于传递拖拽句柄
+const DragHandleContext = createContext<{
+  listeners?: any;
+  attributes?: any;
+}>({});
 
 interface DataTableProps {
   links: Link[];
@@ -55,18 +61,18 @@ const DraggableRow: React.FC<RowProps> = (props) => {
     ...props.style,
     transform: CSS.Transform.toString(transform),
     transition,
-    cursor: 'move',
     ...(isDragging ? { position: 'relative', zIndex: 9999 } : {}),
   };
 
+  // 将拖拽监听器存储在 context 中，供子组件使用
   return (
-    <tr
-      {...props}
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-    />
+    <DragHandleContext.Provider value={{ listeners, attributes }}>
+      <tr
+        {...props}
+        ref={setNodeRef}
+        style={style}
+      />
+    </DragHandleContext.Provider>
   );
 };
 
@@ -116,25 +122,45 @@ export const DataTable: React.FC<DataTableProps> = ({
     setSelectedRowKeys([]);
   };
 
+  // 拖拽句柄组件
+  const DragHandle = () => {
+    const { listeners, attributes } = useContext(DragHandleContext);
+    return (
+      <div {...listeners} {...attributes} style={{ cursor: 'move', display: 'inline-block' }}>
+        <DragOutlined style={{ color: '#999' }} />
+      </div>
+    );
+  };
+
+  // 获取所有唯一的分类用于筛选
+  const categoryFilters = React.useMemo(() => {
+    const categories = Array.from(new Set(links.map(link => link.category || '未分类')));
+    return categories.map(category => ({
+      text: category,
+      value: category,
+    }));
+  }, [links]);
+
   // 表格列定义
   const columns: ColumnsType<Link> = [
     {
       title: '',
       key: 'drag',
       width: 50,
-      render: () => <DragOutlined style={{ cursor: 'move', color: '#999' }} />,
+      render: () => <DragHandle />,
     },
     {
       title: '名称',
       dataIndex: 'name',
       key: 'name',
-      width: 200,
+      width: 120,
       ellipsis: true,
     },
     {
       title: '地址',
       dataIndex: 'url',
       key: 'url',
+      width: 200,
       ellipsis: true,
       render: (url: string) => (
         <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">
@@ -146,7 +172,7 @@ export const DataTable: React.FC<DataTableProps> = ({
       title: '描述',
       dataIndex: 'description',
       key: 'description',
-      width: 250,
+      width: 240,
       ellipsis: true,
     },
     {
@@ -154,6 +180,8 @@ export const DataTable: React.FC<DataTableProps> = ({
       dataIndex: 'category',
       key: 'category',
       width: 100,
+      filters: categoryFilters,
+      onFilter: (value, record) => (record.category || '未分类') === value,
       render: (category: string) => (
         <Tag color="blue">{category || '未分类'}</Tag>
       ),
@@ -217,7 +245,7 @@ export const DataTable: React.FC<DataTableProps> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className={selectedRowKeys.length > 0 ? 'space-y-4' : ''}>
       {/* 批量操作工具栏 */}
       <div className="flex justify-between items-center" role="toolbar" aria-label="批量操作工具栏">
         <div className="text-sm text-gray-600" role="status" aria-live="polite">
@@ -255,6 +283,7 @@ export const DataTable: React.FC<DataTableProps> = ({
             columns={columns}
             dataSource={links}
             rowKey="id"
+            size="middle"
             rowSelection={rowSelection}
             components={{
               body: {

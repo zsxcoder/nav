@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useMemo, memo } from 'react';
+import React, { useCallback, useMemo, memo, useState, useEffect } from 'react';
 import { Menu } from 'antd';
 import type { MenuProps } from 'antd';
 import * as AntdIcons from '@ant-design/icons';
@@ -34,6 +34,12 @@ interface CategorySidebarProps {
 const CategorySidebarBase: React.FC<CategorySidebarProps> = ({ className, style }) => {
   const dispatch = useAppDispatch();
   const currentCategory = useAppSelector((state) => state.settings.currentCategory || '主页');
+  const [mounted, setMounted] = useState(false);
+
+  // 等待客户端挂载，避免 hydration 错误
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // 使用 useCallback 缓存事件处理函数
   const handleCategoryChange: MenuProps['onClick'] = useCallback((e: { key: string }) => {
@@ -56,7 +62,7 @@ const CategorySidebarBase: React.FC<CategorySidebarProps> = ({ className, style 
     >
       <Menu
         mode="inline"
-        selectedKeys={[currentCategory]}
+        selectedKeys={mounted ? [currentCategory] : ['主页']}
         onClick={handleCategoryChange}
         items={menuItems}
         style={{ 

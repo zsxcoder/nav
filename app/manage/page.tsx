@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Button, Space, Typography } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Button, Space, Typography, Spin } from 'antd';
 import { PlusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
@@ -26,9 +26,15 @@ export default function ManagePage() {
   const dispatch = useAppDispatch();
   const links = useAppSelector((state) => state.links.items);
 
+  const [mounted, setMounted] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [currentLink, setCurrentLink] = useState<Link | null>(null);
   const [resetModalOpen, setResetModalOpen] = useState(false);
+
+  // 等待客户端挂载，避免 hydration 错误
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // 处理编辑链接
   const handleEdit = (link: Link) => {
@@ -149,6 +155,15 @@ export default function ManagePage() {
   const handleResetCancel = () => {
     setResetModalOpen(false);
   };
+
+  // 在挂载前显示加载状态，避免 hydration 错误
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <Spin size="large" tip="加载中..." />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

@@ -230,7 +230,7 @@ export const ImportExport: React.FC = () => {
       </Button>
 
       {/* 导入区域 */}
-      <Space.Compact>
+      <div className="flex items-center gap-2">
         <Upload
           fileList={fileList}
           beforeUpload={beforeUpload}
@@ -238,9 +238,18 @@ export const ImportExport: React.FC = () => {
           onRemove={handleRemove}
           maxCount={1}
           accept=".json"
+          showUploadList={false}
         >
           <Button icon={<UploadOutlined />}>选择文件</Button>
         </Upload>
+        
+        {/* 已选择文件显示 */}
+        {fileList.length > 0 && (
+          <span className="text-sm text-gray-600 dark:text-gray-400 max-w-[200px] truncate" title={fileList[0].name}>
+            {fileList[0].name}
+          </span>
+        )}
+        
         <Button
           type="primary"
           onClick={handleImport}
@@ -248,7 +257,7 @@ export const ImportExport: React.FC = () => {
         >
           导入
         </Button>
-      </Space.Compact>
+      </div>
     </Space>
   );
 };

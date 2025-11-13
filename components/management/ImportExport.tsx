@@ -227,43 +227,58 @@ export const ImportExport: React.FC = () => {
 
         // 合并分类数据：根据分类名称判断
         const existingCategoriesMap = new Map(categories.map(cat => [cat.name, cat]));
-        const mergedCategories: Category[] = [];
-        let newCategoriesCount = 0;
+        const updatedCategories: Category[] = [];
+        const newCategories: Category[] = [];
         let updatedCategoriesCount = 0;
 
         categoriesData.forEach((importedCategory: Category) => {
           const existingCategory = existingCategoriesMap.get(importedCategory.name);
           if (existingCategory) {
-            // 名称相同，更新其他字段
-            mergedCategories.push({
+            // 名称相同，更新其他字段（保留原有排序）
+            updatedCategories.push({
               ...existingCategory,
               ...importedCategory,
               id: existingCategory.id, // 保留原有 ID
+              order: existingCategory.order, // 保留原有排序
               createdAt: existingCategory.createdAt, // 保留创建时间
               updatedAt: Date.now(), // 更新修改时间
             });
             updatedCategoriesCount++;
             existingCategoriesMap.delete(importedCategory.name); // 标记为已处理
           } else {
-            // 新分类
-            mergedCategories.push({
+            // 新分类，暂存
+            newCategories.push({
               ...importedCategory,
               updatedAt: Date.now(),
             });
-            newCategoriesCount++;
           }
         });
 
         // 添加未被更新的现有分类
+        const unchangedCategories: Category[] = [];
         existingCategoriesMap.forEach(cat => {
-          mergedCategories.push(cat);
+          unchangedCategories.push(cat);
         });
 
-        // 重新排序分类
-        const sortedCategories = mergedCategories.map((cat, index) => ({
-          ...cat,
-          order: index,
-        }));
+        // 合并所有分类并按原有 order 排序
+        const allCategories = [...updatedCategories, ...unchangedCategories].sort((a, b) => a.order - b.order);
+
+        // 为新分类分配排序位置
+        const usedOrders = new Set(allCategories.map(cat => cat.order));
+        newCategories.forEach(newCat => {
+          let targetOrder = newCat.order;
+          // 如果目标位置已被占用，找到下一个可用位置
+          while (usedOrders.has(targetOrder)) {
+            targetOrder++;
+          }
+          newCat.order = targetOrder;
+          usedOrders.add(targetOrder);
+          allCategories.push(newCat);
+        });
+
+        // 最终排序
+        const sortedCategories = allCategories.sort((a, b) => a.order - b.order);
+        const newCategoriesCount = newCategories.length;
 
         // 显示确认对话框
         const message = `即将导入数据：\n` +

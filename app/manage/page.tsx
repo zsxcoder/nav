@@ -6,6 +6,7 @@ import { PlusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { addLink, updateLink, deleteLink, reorderLinks, resetLinks } from '@/store/slices/linksSlice';
+import { resetCategories, defaultCategories } from '@/store/slices/categoriesSlice';
 import { DataTable } from '@/components/management/DataTable';
 import { EditLinkModal } from '@/components/modals/EditLinkModal';
 import { ImportExport } from '@/components/management/ImportExport';
@@ -135,6 +136,7 @@ export default function ManagePage() {
 
       // 重置 Redux store 为默认数据
       dispatch(resetLinks(defaultLinks));
+      dispatch(resetCategories(defaultCategories));
 
       // 保存默认数据到 LocalStorage
       const saveResult = storageService.saveLinks(defaultLinks);
@@ -143,6 +145,9 @@ export default function ManagePage() {
         showError(saveResult.error || '保存默认数据失败');
         return;
       }
+
+      // 保存默认分类到 LocalStorage
+      localStorage.setItem('nav_categories', JSON.stringify(defaultCategories));
 
       // 关闭对话框
       setResetModalOpen(false);

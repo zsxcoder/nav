@@ -63,7 +63,7 @@ export const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
       onCancel={handleCancel}
       okText={category ? '保存' : '添加'}
       cancelText="取消"
-      destroyOnClose
+      destroyOnHidden
     >
       <Form
         form={form}

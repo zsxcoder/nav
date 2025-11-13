@@ -6,7 +6,9 @@ import { DownloadOutlined, UploadOutlined, ExclamationCircleOutlined } from '@an
 import type { UploadFile, UploadProps } from 'antd';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { loadLinks } from '@/store/slices/linksSlice';
+import { loadCategories } from '@/store/slices/categoriesSlice';
 import { Link } from '@/types/link';
+import type { Category } from '@/types/category';
 import { showSuccess, showError, showWarning, showConfirm } from '@/utils/feedback';
 
 /**
@@ -59,6 +61,7 @@ const validateLinkData = (data: any): data is Link[] => {
 export const ImportExport: React.FC = () => {
   const dispatch = useAppDispatch();
   const links = useAppSelector((state) => state.links.items);
+  const categories = useAppSelector((state) => state.categories.items);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
 
   /**
@@ -71,8 +74,15 @@ export const ImportExport: React.FC = () => {
         return;
       }
 
-      // 将链接数据转换为 JSON 字符串
-      const jsonData = JSON.stringify(links, null, 2);
+      // 导出新格式：包含 links 和 categories
+      const exportData = {
+        links,
+        categories,
+        version: '1.0',
+        exportTime: Date.now(),
+      };
+
+      const jsonData = JSON.stringify(exportData, null, 2);
       
       // 创建 Blob 对象
       const blob = new Blob([jsonData], { type: 'application/json' });
@@ -81,7 +91,7 @@ export const ImportExport: React.FC = () => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `navigation-links-${Date.now()}.json`;
+      link.download = `navigation-data-${Date.now()}.json`;
       
       // 触发下载
       document.body.appendChild(link);
@@ -146,42 +156,138 @@ export const ImportExport: React.FC = () => {
           return;
         }
 
-        let data;
+        let parsedData;
         try {
-          data = JSON.parse(content);
+          parsedData = JSON.parse(content);
         } catch (parseError) {
           console.error('JSON parse error:', parseError);
           showError('文件格式错误，无法解析 JSON 数据');
           return;
         }
 
-        // 验证数据格式
-        if (!validateLinkData(data)) {
-          showError('文件格式不正确，请确保是有效的导航链接数据');
+        // 验证是否为新格式（包含 links 和 categories）
+        if (!parsedData.links || !Array.isArray(parsedData.links)) {
+          showError('文件格式不正确，请确保是有效的导航数据');
           return;
         }
 
-        if (data.length === 0) {
+        const linksData = parsedData.links;
+        const categoriesData = parsedData.categories || [];
+
+        // 验证链接数据格式
+        if (!validateLinkData(linksData)) {
+          showError('链接数据格式不正确');
+          return;
+        }
+
+        if (linksData.length === 0) {
           showWarning('导入的文件中没有链接数据');
           return;
         }
 
+        // 合并链接数据：根据 URL 判断是否为同一链接
+        const existingLinksMap = new Map(links.map(link => [link.url, link]));
+        const mergedLinks: Link[] = [];
+        let newLinksCount = 0;
+        let updatedLinksCount = 0;
+
+        linksData.forEach((importedLink: Link) => {
+          const existingLink = existingLinksMap.get(importedLink.url);
+          if (existingLink) {
+            // URL 相同，更新其他字段
+            mergedLinks.push({
+              ...existingLink,
+              ...importedLink,
+              id: existingLink.id, // 保留原有 ID
+              createdAt: existingLink.createdAt, // 保留创建时间
+              updatedAt: Date.now(), // 更新修改时间
+            });
+            updatedLinksCount++;
+            existingLinksMap.delete(importedLink.url); // 标记为已处理
+          } else {
+            // 新链接
+            mergedLinks.push({
+              ...importedLink,
+              updatedAt: Date.now(),
+            });
+            newLinksCount++;
+          }
+        });
+
+        // 添加未被更新的现有链接
+        existingLinksMap.forEach(link => {
+          mergedLinks.push(link);
+        });
+
+        // 重新排序
+        const sortedLinks = mergedLinks.map((link, index) => ({
+          ...link,
+          order: index,
+        }));
+
+        // 合并分类数据：根据分类名称判断
+        const existingCategoriesMap = new Map(categories.map(cat => [cat.name, cat]));
+        const mergedCategories: Category[] = [];
+        let newCategoriesCount = 0;
+        let updatedCategoriesCount = 0;
+
+        categoriesData.forEach((importedCategory: Category) => {
+          const existingCategory = existingCategoriesMap.get(importedCategory.name);
+          if (existingCategory) {
+            // 名称相同，更新其他字段
+            mergedCategories.push({
+              ...existingCategory,
+              ...importedCategory,
+              id: existingCategory.id, // 保留原有 ID
+              createdAt: existingCategory.createdAt, // 保留创建时间
+              updatedAt: Date.now(), // 更新修改时间
+            });
+            updatedCategoriesCount++;
+            existingCategoriesMap.delete(importedCategory.name); // 标记为已处理
+          } else {
+            // 新分类
+            mergedCategories.push({
+              ...importedCategory,
+              updatedAt: Date.now(),
+            });
+            newCategoriesCount++;
+          }
+        });
+
+        // 添加未被更新的现有分类
+        existingCategoriesMap.forEach(cat => {
+          mergedCategories.push(cat);
+        });
+
+        // 重新排序分类
+        const sortedCategories = mergedCategories.map((cat, index) => ({
+          ...cat,
+          order: index,
+        }));
+
         // 显示确认对话框
+        const message = `即将导入数据：\n` +
+          `• 链接：新增 ${newLinksCount} 个，更新 ${updatedLinksCount} 个\n` +
+          `• 分类：新增 ${newCategoriesCount} 个，更新 ${updatedCategoriesCount} 个\n` +
+          `是否继续？`;
+
         showConfirm({
           title: '确认导入',
           icon: <ExclamationCircleOutlined />,
-          content: `即将导入 ${data.length} 个链接，这将覆盖当前所有数据。是否继续？`,
+          content: message,
           okText: '确认导入',
           cancelText: '取消',
           onOk: () => {
             try {
               // 更新 Redux store
-              dispatch(loadLinks(data));
+              dispatch(loadLinks(sortedLinks));
+              dispatch(loadCategories(sortedCategories));
               
               // 保存到 LocalStorage
-              localStorage.setItem('nav_links', JSON.stringify(data));
+              localStorage.setItem('nav_links', JSON.stringify(sortedLinks));
+              localStorage.setItem('nav_categories', JSON.stringify(sortedCategories));
               
-              showSuccess(`成功导入 ${data.length} 个链接`);
+              showSuccess(`成功导入：新增 ${newLinksCount} 个链接，更新 ${updatedLinksCount} 个链接`);
               setFileList([]);
             } catch (saveError) {
               console.error('Save error:', saveError);

@@ -1,4 +1,4 @@
-import { Link, Category } from '@/types/link';
+import { Link } from '@/types/link';
 import { Settings } from '@/types/settings';
 import { SearchEngine } from '@/types/search';
 
@@ -6,7 +6,7 @@ import { SearchEngine } from '@/types/search';
  * 生成唯一 ID
  */
 function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 }
 
 /**
@@ -16,7 +16,7 @@ function createLink(
   name: string,
   url: string,
   description: string,
-  category: Category,
+  category: string,
   backgroundColor?: string,
   tags?: string[]
 ): Link {

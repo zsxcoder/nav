@@ -74,17 +74,27 @@ body {
   overflow-x: hidden;
 }
 
-/* 主题过渡动画 - 优化性能 */
-* {
-  transition-property: background-color, border-color, color, fill, stroke, box-shadow;
-  transition-duration: var(--transition-duration);
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+/* 主题过渡动画 - 优化性能，避免文字闪烁 */
+html {
+  color-scheme: light dark;
 }
 
-/* 禁用某些元素的过渡效果以提升性能 */
-*:before,
-*:after {
-  transition-property: background-color, border-color, color, fill, stroke;
+/* 只对特定元素应用过渡效果，避免全局过渡导致的闪烁 */
+body,
+.ant-layout,
+.ant-card,
+.ant-btn,
+.ant-input,
+.ant-select,
+.ant-menu,
+.ant-dropdown,
+nav,
+header,
+aside,
+main {
+  transition-property: background-color, border-color, box-shadow;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* 性能优化：使用 GPU 加速 */

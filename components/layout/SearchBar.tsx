@@ -28,9 +28,15 @@ export default function SearchBar() {
   
   // 本地状态
   const [inputValue, setInputValue] = useState(searchQuery);
+  const [mounted, setMounted] = useState(false);
   
-  // 获取当前搜索引擎配置
-  const currentEngine = getSearchEngine(currentEngineId);
+  // 等待客户端挂载，避免 hydration 错误
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  // 获取当前搜索引擎配置 - 服务端渲染时使用默认值
+  const currentEngine = getSearchEngine(mounted ? currentEngineId : 'google');
   
   // 同步 Redux 状态到本地输入框
   useEffect(() => {

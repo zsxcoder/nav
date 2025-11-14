@@ -22,7 +22,7 @@ export const PRESET_COLORS = [
   '#fff1b8',
   '#d9f7be',
   '#b5f5ec',
-  '#d6e4ff',
+  '#bae0ff',
   '#efdbff',
 
   // 17-24: 红色到紫色的亮色系

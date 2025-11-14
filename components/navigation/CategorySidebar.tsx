@@ -99,7 +99,7 @@ const DraggableCategoryItem: React.FC<DraggableCategoryItemProps> = ({
           {...listeners}
           {...attributes}
           className={`
-            flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 cursor-pointer
+            flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 cursor-pointer
             ${isSelected 
               ? 'text-white shadow-md bg-(--primary)' 
               : 'hover:bg-blue-100 dark:hover:bg-blue-500/50 text-gray-600 dark:text-gray-400'

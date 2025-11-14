@@ -38,6 +38,12 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
     return IconComponent ? <IconComponent /> : <Icons.AppstoreOutlined />;
   };
 
+  // 使用 useMemo 计算默认分类，避免 useEffect 依赖项大小变化
+  const defaultCategory = React.useMemo(() => {
+    const sortedCategories = [...categories].sort((a, b) => a.order - b.order);
+    return sortedCategories[0]?.name || '主页';
+  }, [categories]);
+
   // 当弹窗打开或链接数据变化时，更新表单
   useEffect(() => {
     if (open) {
@@ -47,20 +53,20 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
           name: link.name,
           url: link.url,
           description: link.description || '',
-          category: link.category || '主页',
+          category: link.category || defaultCategory,
           icon: link.icon || '',
           backgroundColor: link.backgroundColor || getDefaultColor(),
         });
       } else {
-        // 添加模式：重置表单
+        // 添加模式：重置表单，使用第一个分类作为默认值
         form.resetFields();
         form.setFieldsValue({
-          category: '主页',
+          category: defaultCategory,
           backgroundColor: getDefaultColor(),
         });
       }
     }
-  }, [open, link, form]);
+  }, [open, link, form, defaultCategory]);
 
   // 处理 URL 输入变化，自动获取 favicon
   const handleUrlChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -143,6 +149,7 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
       <span id="edit-link-modal-description" className="sr-only">
         填写表单以{link ? '编辑' : '添加'}导航链接信息
       </span>
+      <div className='pt-2'></div>
       <Form
         form={form}
         labelCol={{ flex: '54px' }}

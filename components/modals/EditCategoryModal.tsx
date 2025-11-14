@@ -65,16 +65,18 @@ export const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
       cancelText="取消"
       destroyOnHidden
     >
+      <div className='pt-2'></div>
       <Form
         form={form}
-        layout="vertical"
+        labelCol={{ flex: '54px' }}
+        autoComplete="off"
         initialValues={{
           name: '',
           icon: 'AppstoreOutlined',
         }}
       >
         <Form.Item
-          label="分类名称"
+          label="名称"
           name="name"
           rules={[
             { required: true, message: '请输入分类名称' },

@@ -178,7 +178,7 @@ const categoriesSlice = createSlice({
      * 重置分类数据
      */
     resetCategories: (state, action: PayloadAction<Category[]>) => {
-      state.items = action.payload.sort((a, b) => a.order - b.order);
+      state.items = [...action.payload].sort((a, b) => a.order - b.order);
       state.error = null;
     },
 

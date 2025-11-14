@@ -90,9 +90,9 @@ export const ResetDataModal: React.FC<ResetDataModalProps> = ({
             此操作将：
           </Paragraph>
           <ul className='pl-4 font-medium'>
-            <li>删除所有自定义导航链接</li>
-            <li>清除所有用户设置</li>
-            <li>恢复到初始默认数据</li>
+            <li>删除所有用户数据，包括导航链接和分类</li>
+            <li>清除所有用户自定义设置</li>
+            <li>恢复数据和设置到初始默认状态</li>
           </ul>
         </div>
 

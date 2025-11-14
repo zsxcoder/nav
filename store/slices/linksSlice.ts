@@ -124,7 +124,7 @@ const linksSlice = createSlice({
      * 重置链接数据
      */
     resetLinks: (state, action: PayloadAction<Link[]>) => {
-      state.items = action.payload.sort((a, b) => a.order - b.order);
+      state.items = [...action.payload].sort((a, b) => a.order - b.order);
       state.error = null;
     },
 

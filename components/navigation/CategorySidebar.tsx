@@ -199,18 +199,18 @@ const CategorySidebarBase: React.FC<CategorySidebarProps> = ({ className, style 
     showConfirm({
       title: '确认删除分类',
       content: linksInCategory.length > 0 
-        ? `该分类下有 ${linksInCategory.length} 个链接，删除后这些链接将移动到"其他"分类。确定要删除吗？`
+        ? `该分类下有 ${linksInCategory.length} 个链接，删除后这些链接的分类将被清空。确定要删除吗？`
         : '确定要删除这个分类吗？',
       okText: '删除',
       cancelText: '取消',
       okType: 'danger',
       onOk: () => {
-        // 将该分类下的所有链接移动到"其他"分类
+        // 将该分类下的所有链接的分类字段置空
         if (linksInCategory.length > 0) {
           linksInCategory.forEach(link => {
             dispatch(updateLink({
               id: link.id,
-              category: '其他',
+              category: '',
             }));
           });
         }
@@ -218,15 +218,18 @@ const CategorySidebarBase: React.FC<CategorySidebarProps> = ({ className, style 
         // 删除分类
         dispatch(deleteCategory(category.id));
         
-        // 如果删除的是当前选中的分类，切换到"主页"
+        // 如果删除的是当前选中的分类，切换到第一个分类
         if (currentCategory === category.name) {
-          dispatch(setCurrentCategory('主页'));
+          const remainingCategories = categories.filter(cat => cat.id !== category.id);
+          const sortedCategories = [...remainingCategories].sort((a, b) => a.order - b.order);
+          const nextCategory = sortedCategories[0]?.name || '主页';
+          dispatch(setCurrentCategory(nextCategory));
         }
         
         showSuccess('分类已删除');
       },
     });
-  }, [dispatch, links, currentCategory]);
+  }, [dispatch, links, currentCategory, categories]);
 
   // 处理分类编辑提交
   const handleCategorySubmit = useCallback((data: { name: string; icon: string }) => {

@@ -2,7 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button, Space, Spin, Popconfirm } from 'antd';
-import { PlusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { 
+  PlusOutlined, 
+  ArrowLeftOutlined, 
+  ReloadOutlined, 
+  DeleteOutlined, 
+  TagsOutlined 
+} from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { addLink, updateLink, deleteLink, reorderLinks, resetLinks } from '@/store/slices/linksSlice';
@@ -11,6 +17,7 @@ import { DataTable } from '@/components/management/DataTable';
 import { EditLinkModal } from '@/components/modals/EditLinkModal';
 import { ImportExport } from '@/components/management/ImportExport';
 import { ResetDataModal } from '@/components/modals/ResetDataModal';
+import { BatchCategoryModal } from '@/components/modals/BatchCategoryModal';
 import { Link } from '@/types/link';
 import { defaultLinks } from '@/services/defaultData';
 import { storageService } from '@/services/storage';
@@ -29,6 +36,7 @@ export default function ManagePage() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [currentLink, setCurrentLink] = useState<Link | null>(null);
   const [resetModalOpen, setResetModalOpen] = useState(false);
+  const [batchCategoryModalOpen, setBatchCategoryModalOpen] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
   // 等待客户端挂载，避免 hydration 错误
@@ -73,6 +81,33 @@ export default function ManagePage() {
     } catch (error) {
       console.error('批量删除失败:', error);
       showError('批量删除失败，请重试');
+    }
+  };
+
+  // 处理批量分类点击
+  const handleBatchCategoryClick = () => {
+    if (selectedRowKeys.length === 0) {
+      showWarning('请选择至少1条数据');
+      return;
+    }
+    setBatchCategoryModalOpen(true);
+  };
+
+  // 处理批量分类提交
+  const handleBatchCategorySubmit = (category: string) => {
+    try {
+      selectedRowKeys.forEach((id) => {
+        dispatch(updateLink({
+          id: id as string,
+          category,
+        }));
+      });
+      showSuccess(`成功将 ${selectedRowKeys.length} 个链接分类到"${category}"`);
+      setSelectedRowKeys([]);
+      setBatchCategoryModalOpen(false);
+    } catch (error) {
+      console.error('批量分类失败:', error);
+      showError('批量分类失败，请重试');
     }
   };
 
@@ -211,6 +246,7 @@ export default function ManagePage() {
             <div className='flex gap-4'>
               <Button
                 danger
+                icon={<ReloadOutlined aria-hidden="true" />}
                 onClick={handleResetClick}
               >
                 重置数据
@@ -223,13 +259,21 @@ export default function ManagePage() {
                 disabled={selectedRowKeys.length === 0}
               >
                 <Button 
-                  danger 
+                  danger
+                  icon={<DeleteOutlined aria-hidden="true" />}
                   onClick={handleBatchDeleteClick}
                   aria-label={selectedRowKeys.length > 0 ? `批量删除选中的 ${selectedRowKeys.length} 个链接` : '批量删除'}
                 >
                   批量删除
                 </Button>
               </Popconfirm>
+              <Button
+                icon={<TagsOutlined aria-hidden="true" />}
+                onClick={handleBatchCategoryClick}
+                aria-label={selectedRowKeys.length > 0 ? `批量分类选中的 ${selectedRowKeys.length} 个链接` : '批量分类'}
+              >
+                批量分类
+              </Button>
               <Button
                 type="primary"
                 icon={<PlusOutlined aria-hidden="true" />}
@@ -268,6 +312,14 @@ export default function ManagePage() {
           open={resetModalOpen}
           onConfirm={handleResetConfirm}
           onCancel={handleResetCancel}
+        />
+
+        {/* 批量分类弹窗 */}
+        <BatchCategoryModal
+          open={batchCategoryModalOpen}
+          selectedCount={selectedRowKeys.length}
+          onCancel={() => setBatchCategoryModalOpen(false)}
+          onSubmit={handleBatchCategorySubmit}
         />
       </div>
     </div>

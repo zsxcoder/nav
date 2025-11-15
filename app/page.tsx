@@ -159,7 +159,7 @@ export default function Home() {
         {/* 右侧内容区域 */}
         <main 
           id="main-content" 
-          className="flex-1 overflow-y-auto"
+          className="flex-1 overflow-y-auto overflow-x-hidden"
           role="main"
           aria-label="导航链接主内容区"
         >

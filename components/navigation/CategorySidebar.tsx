@@ -12,6 +12,7 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  Modifier,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -142,7 +143,7 @@ const CategorySidebarBase: React.FC<CategorySidebarProps> = ({ className, style 
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
-  // 配置拖拽传感器 - 需要移动 5px 才触发拖拽，避免与点击冲突
+  // 配置拖拽传感器 - 需要移动 8px 才触发拖拽，避免与点击冲突
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -153,6 +154,22 @@ const CategorySidebarBase: React.FC<CategorySidebarProps> = ({ className, style 
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  // 限制拖拽范围的修饰符 - 限制在侧边栏内
+  const restrictToSidebar: Modifier = ({ transform, containerNodeRect, draggingNodeRect }) => {
+    if (!containerNodeRect || !draggingNodeRect) {
+      return transform;
+    }
+
+    return {
+      ...transform,
+      x: Math.min(
+        Math.max(transform.x, containerNodeRect.left - draggingNodeRect.left),
+        containerNodeRect.right - draggingNodeRect.right
+      ),
+      y: transform.y,
+    };
+  };
 
   // 等待客户端挂载，避免 hydration 错误
   useEffect(() => {
@@ -306,6 +323,7 @@ const CategorySidebarBase: React.FC<CategorySidebarProps> = ({ className, style 
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
+          modifiers={[restrictToSidebar]}
         >
           <SortableContext
             items={sortedCategories.map((cat) => cat.id)}

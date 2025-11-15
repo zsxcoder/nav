@@ -10,6 +10,8 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragOverlay,
+  Modifier,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -59,6 +61,22 @@ const LinkGridBase: React.FC<LinkGridProps> = ({
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  // 限制拖拽范围的修饰符
+  const restrictToParentElement: Modifier = ({ transform, containerNodeRect, draggingNodeRect }) => {
+    if (!containerNodeRect || !draggingNodeRect) {
+      return transform;
+    }
+
+    return {
+      ...transform,
+      x: Math.min(
+        Math.max(transform.x, containerNodeRect.left - draggingNodeRect.left),
+        containerNodeRect.right - draggingNodeRect.right
+      ),
+      y: transform.y,
+    };
+  };
 
   // 过滤显示的链接
   const displayedLinks = useMemo(() => {
@@ -129,6 +147,7 @@ const LinkGridBase: React.FC<LinkGridProps> = ({
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
+      modifiers={[restrictToParentElement]}
     >
       <SortableContext
         items={displayedLinks.map((link) => link.id)}
@@ -136,8 +155,8 @@ const LinkGridBase: React.FC<LinkGridProps> = ({
         disabled={!isDraggingEnabled}
       >
         <div 
-          className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 p-8 ${className || ''}`}
-          style={style}
+          className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 p-8 max-w-full ${className || ''}`}
+          style={{ ...style, width: '100%', boxSizing: 'border-box' }}
           role="region"
           aria-label={searchQuery.trim() ? `搜索结果：${displayedLinks.length} 个链接` : `${currentCategory}分类：${displayedLinks.length} 个链接`}
         >

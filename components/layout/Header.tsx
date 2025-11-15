@@ -3,7 +3,7 @@
 import React, { memo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Tooltip } from 'antd';
-import { SettingOutlined } from '@ant-design/icons';
+import { EditOutlined, SettingOutlined } from '@ant-design/icons';
 import SearchBar from './SearchBar';
 import ThemeToggle from './ThemeToggle';
 
@@ -54,7 +54,7 @@ const Header = memo(function Header() {
             <Tooltip title="数据管理" placement="bottom">
               <Button
                 type="text"
-                icon={<SettingOutlined aria-hidden="true" />}
+                icon={<EditOutlined aria-hidden="true" />}
                 onClick={handleManageClick}
                 aria-label="打开数据管理页面"
                 title="数据管理"

@@ -18,7 +18,7 @@ const defaultSettings: Settings = {
   theme: 'system',
   searchEngine: 'google',
   layout: 'grid',
-  currentCategory: '主页',
+  currentCategory: '常用工具',
   showDescription: true,
   gridColumns: 6,
 };

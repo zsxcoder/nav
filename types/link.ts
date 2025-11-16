@@ -21,6 +21,9 @@ export interface Link {
   /** 背景颜色（HEX 格式） */
   backgroundColor?: string;
   
+  /** 图标占背景比率，默认 0.8 */
+  iconScale?: number;
+  
   /** 分类 */
   category?: string;
   

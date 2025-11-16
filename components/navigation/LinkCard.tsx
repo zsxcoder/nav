@@ -20,14 +20,18 @@ const IconWithFallback: React.FC<{
   src: string; 
   alt: string; 
   fallbackUrl?: string;
-}> = ({ src, alt, fallbackUrl }) => {
+  scale?: number;
+}> = ({ src, alt, fallbackUrl, scale = 0.8 }) => {
   const [hasError, setHasError] = useState(false);
   const [faviconError, setFaviconError] = useState(false);
+
+  // 计算图标大小（基础大小 60px）
+  const iconSize = Math.round(60 * scale);
 
   // 如果用户图标和 favicon 都失败，显示默认图标
   if (hasError && faviconError) {
     const DefaultIcon = AntdIcons.LinkOutlined;
-    return <DefaultIcon style={{ fontSize: 48 }} aria-label={`${alt}的默认图标`} />;
+    return <DefaultIcon style={{ fontSize: iconSize }} aria-label={`${alt}的默认图标`} />;
   }
 
   // 如果用户图标失败，尝试 favicon
@@ -37,7 +41,10 @@ const IconWithFallback: React.FC<{
         src={fallbackUrl} 
         alt={`${alt}的图标`}
         loading="lazy"
-        className="w-15 h-15 object-contain"
+        className="w-25 h-25 object-contain"
+        style={{ 
+          transform: `scale(${scale})`,
+        }}
         onError={() => {
           console.warn(`Favicon 加载失败: ${fallbackUrl}`);
           setFaviconError(true);
@@ -52,7 +59,10 @@ const IconWithFallback: React.FC<{
       src={src} 
       alt={`${alt}的图标`}
       loading="lazy"
-      className="w-15 h-15 object-contain"
+      className="w-25 h-25 object-contain"
+      style={{ 
+        transform: `scale(${scale})`,
+      }}
       onError={() => {
         console.warn(`图标加载失败: ${src}`);
         setHasError(true);
@@ -142,6 +152,8 @@ const LinkCardBase: React.FC<LinkCardProps> = ({ link, onEdit, onDelete, isDragg
   const renderIcon = React.useMemo(() => {
     // 获取 favicon URL 作为回退选项，使用 larger=true 获取更高质量的图标
     const faviconUrl = getFaviconUrl(link.url, { larger: true });
+    const scale = link.iconScale || 0.8;
+    const iconSize = Math.round(60 * scale);
 
     // 情况1: 用户提供了自定义图标 URL
     if (link.icon && (link.icon.startsWith('http://') || link.icon.startsWith('https://') || link.icon.startsWith('/'))) {
@@ -150,6 +162,7 @@ const LinkCardBase: React.FC<LinkCardProps> = ({ link, onEdit, onDelete, isDragg
           src={link.icon} 
           alt={link.name}
           fallbackUrl={faviconUrl || undefined}
+          scale={scale}
         />
       );
     }
@@ -158,7 +171,7 @@ const LinkCardBase: React.FC<LinkCardProps> = ({ link, onEdit, onDelete, isDragg
     if (link.icon) {
       const IconComponent = (AntdIcons as any)[link.icon];
       if (IconComponent) {
-        return <IconComponent style={{ fontSize: 48 }} />;
+        return <IconComponent style={{ fontSize: iconSize }} />;
       }
     }
 
@@ -168,14 +181,15 @@ const LinkCardBase: React.FC<LinkCardProps> = ({ link, onEdit, onDelete, isDragg
         <IconWithFallback 
           src={faviconUrl} 
           alt={link.name}
+          scale={scale}
         />
       );
     }
 
     // 情况4: 所有方式都失败，显示默认图标
     const DefaultIcon = AntdIcons.LinkOutlined;
-    return <DefaultIcon style={{ fontSize: 48 }} />;
-  }, [link.icon, link.name, link.url]);
+    return <DefaultIcon style={{ fontSize: iconSize }} />;
+  }, [link.icon, link.name, link.url, link.iconScale]);
 
   return (
     <div
@@ -261,6 +275,7 @@ const LinkCard = memo(LinkCardBase, (prevProps, nextProps) => {
     prevProps.link.description === nextProps.link.description &&
     prevProps.link.icon === nextProps.link.icon &&
     prevProps.link.backgroundColor === nextProps.link.backgroundColor &&
+    prevProps.link.iconScale === nextProps.link.iconScale &&
     prevProps.onEdit === nextProps.onEdit &&
     prevProps.onDelete === nextProps.onDelete &&
     prevProps.isDraggingEnabled === nextProps.isDraggingEnabled

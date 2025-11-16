@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { Modal, Form, Input, Select, ColorPicker } from 'antd';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Modal, Form, Input, Select, ColorPicker, Space, Button, Row, Col } from 'antd';
 import type { Color } from 'antd/es/color-picker';
+import { PlusOutlined, MinusOutlined, UndoOutlined, SearchOutlined, ZoomInOutlined, ZoomOutOutlined } from '@ant-design/icons';
 import * as Icons from '@ant-design/icons';
 import { Link } from '@/types/link';
 import { PRESET_COLORS, isValidColor, getDefaultColor } from '@/utils/colorUtils';
@@ -30,6 +31,11 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [fetchingIcon, setFetchingIcon] = useState(false);
+  const [iconType, setIconType] = useState<'1' | '2'>('1'); // 1: Favicon, 2: 自定义
+  const [previewIcon, setPreviewIcon] = useState<string>('');
+  const [previewBgColor, setPreviewBgColor] = useState<string>(getDefaultColor());
+  const [iconScale, setIconScale] = useState<number>(0.8);
+  const [savedCustomIcon, setSavedCustomIcon] = useState<string>(''); // 保存自定义图标
   const categories = useAppSelector((state) => state.categories.items);
 
   // 渲染图标
@@ -49,51 +55,123 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
     if (open) {
       if (link) {
         // 编辑模式：填充现有数据
+        const bgColor = link.backgroundColor || getDefaultColor();
+        const scale = link.iconScale || 0.8;
+        const iconUrl = link.icon || '';
+        
         form.setFieldsValue({
           name: link.name,
           url: link.url,
           description: link.description || '',
           category: link.category || defaultCategory,
-          icon: link.icon || '',
-          backgroundColor: link.backgroundColor || getDefaultColor(),
+          icon: iconUrl,
+          backgroundColor: bgColor,
+          iconScale: scale,
         });
+        
+        setPreviewIcon(iconUrl);
+        setPreviewBgColor(bgColor);
+        setIconScale(scale);
+        
+        // 判断图标类型
+        if (iconUrl && !iconUrl.includes('favicon.im')) {
+          setIconType('2');
+          setSavedCustomIcon(iconUrl); // 保存自定义图标
+        } else {
+          setIconType('1');
+        }
       } else {
         // 添加模式：重置表单，使用第一个分类作为默认值
+        const defaultBg = getDefaultColor();
         form.resetFields();
         form.setFieldsValue({
           category: defaultCategory,
-          backgroundColor: getDefaultColor(),
+          backgroundColor: defaultBg,
+          iconScale: 0.8,
         });
+        
+        setPreviewIcon('');
+        setPreviewBgColor(defaultBg);
+        setIconScale(0.8);
+        setIconType('1');
+        setSavedCustomIcon('');
       }
     }
   }, [open, link, form, defaultCategory]);
 
   // 处理 URL 输入变化，自动获取 favicon
-  const handleUrlChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const url = e.target.value.trim();
     
     // 验证 URL 格式
     if (!url || !/^https?:\/\/.+/.test(url)) {
+      setPreviewIcon('');
       return;
     }
 
-    // 如果已经有图标，不自动覆盖
-    const currentIcon = form.getFieldValue('icon');
-    if (currentIcon) {
-      return;
-    }
-
-    // 获取 favicon
-    setFetchingIcon(true);
-    try {
+    // 只有在 Favicon 模式下才自动更新
+    if (iconType === '1') {
       const faviconUrl = getFaviconUrl(url);
-      form.setFieldsValue({ icon: faviconUrl });
-    } catch (error) {
-      console.error('获取图标失败:', error);
-    } finally {
-      setFetchingIcon(false);
+      form.setFieldsValue({ icon: faviconUrl || '' });
+      setPreviewIcon(faviconUrl || '');
     }
-  };
+  }, [iconType, form]);
+
+  // 处理图标类型切换
+  const handleIconTypeChange = useCallback((value: '1' | '2') => {
+    setIconType(value);
+    
+    if (value === '1') {
+      // 切换到 Favicon 模式，保存当前自定义图标并自动获取 favicon
+      const currentIcon = form.getFieldValue('icon');
+      if (currentIcon && !currentIcon.includes('favicon.im')) {
+        setSavedCustomIcon(currentIcon);
+      }
+      
+      const url = form.getFieldValue('url');
+      if (url && /^https?:\/\/.+/.test(url)) {
+        const faviconUrl = getFaviconUrl(url, {larger: true});
+        form.setFieldsValue({ icon: faviconUrl || '' });
+        setPreviewIcon(faviconUrl || '');
+      }
+    } else {
+      // 切换到自定义模式，恢复之前保存的自定义图标
+      const iconToRestore = savedCustomIcon || '';
+      form.setFieldsValue({ icon: iconToRestore });
+      setPreviewIcon(iconToRestore);
+    }
+  }, [form, savedCustomIcon]);
+
+  // 处理图标 URL 输入
+  const handleIconUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const iconUrl = e.target.value.trim();
+    form.setFieldsValue({ icon: iconUrl });
+    setPreviewIcon(iconUrl);
+    // 实时保存自定义图标
+    if (iconType === '2') {
+      setSavedCustomIcon(iconUrl);
+    }
+  }, [form, iconType]);
+
+  // 处理背景色变化
+  const handleBgColorChange = useCallback((color: Color) => {
+    const colorValue = color.toHexString();
+    setPreviewBgColor(colorValue);
+    form.setFieldsValue({ backgroundColor: colorValue });
+  }, [form]);
+
+  // 处理图标缩放
+  const handleScaleChange = useCallback((delta: number) => {
+    const newScale = Math.max(0.3, Math.min(1.2, iconScale + delta));
+    setIconScale(newScale);
+    form.setFieldsValue({ iconScale: newScale });
+  }, [form, iconScale]);
+
+  // 重置缩放
+  const handleResetScale = useCallback(() => {
+    setIconScale(0.8);
+    form.setFieldsValue({ iconScale: 0.8 });
+  }, [form]);
 
   // 处理表单提交
   const handleSubmit = async () => {
@@ -108,14 +186,22 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
         return;
       }
 
-      // 构建链接数据
+      // 构建链接数据 - 确保 iconScale 被包含
       const linkData: Partial<Link> = {
         ...values,
         id: link?.id, // 编辑模式时保留 ID
+        iconScale: iconScale, // 使用 state 中的值而不是 form 值
       };
+
+      console.log('提交的链接数据:', linkData); // 调试日志
 
       onSubmit(linkData);
       form.resetFields();
+      setPreviewIcon('');
+      setPreviewBgColor(getDefaultColor());
+      setIconScale(0.8);
+      setIconType('1');
+      setSavedCustomIcon('');
       setLoading(false);
     } catch (error) {
       // 表单验证失败，界面已有提示
@@ -126,8 +212,24 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
   // 处理取消
   const handleCancel = () => {
     form.resetFields();
+    setPreviewIcon('');
+    setPreviewBgColor(getDefaultColor());
+    setIconScale(0.8);
+    setIconType('1');
+    setSavedCustomIcon('');
     onCancel();
   };
+
+  const iconOptions = [
+    {
+      value: '1',
+      label: 'Favicon图标',
+    },
+    {
+      value: '2',
+      label: '自定义图标',
+    },
+  ];
 
   return (
     <Modal
@@ -213,31 +315,106 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
           </Select>
         </Form.Item>
 
-        <Form.Item
-          label="图标"
-          name="icon"
-          extra="默认 https://favicon.im/xxx.com?larger=true"
-        >
-          <Input placeholder="图标URL" />
+        <Form.Item label="图标">
+          <Space.Compact className='w-full'>
+            <Select 
+              className='w-32 flex-1' 
+              value={iconType}
+              onChange={handleIconTypeChange}
+              options={iconOptions} 
+            />
+            <Form.Item name="icon" noStyle>
+              <Input 
+                placeholder={iconType === '1' ? '自动获取' : '输入图标 URL'}
+                disabled={iconType === '1'}
+                onChange={handleIconUrlChange}
+              />
+            </Form.Item>
+          </Space.Compact>
         </Form.Item>
 
-        <Form.Item
-          label="背景"
-          name="backgroundColor"
-        >
-          <ColorPicker
-            presets={[
-              {
-                label: '预设颜色',
-                colors: PRESET_COLORS,
-              },
-            ]}
-            showText
-            format="hex"
-            onChange={(color: Color) => {
-              form.setFieldsValue({ backgroundColor: color.toHexString() });
-            }}
-          />
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item label="预览">
+              <div className="flex items-center gap-3">
+                {/* 预览卡片 */}
+                <div 
+                  className="w-25 h-25 rounded-xl flex items-center justify-center relative overflow-hidden shadow-md transition-all"
+                  style={{ backgroundColor: previewBgColor }}
+                >
+                  {previewIcon ? (
+                    <img
+                      src={previewIcon}
+                      alt="图标预览"
+                      className="w-25 h-25 object-contain transition-all"
+                      style={{
+                        transform: `scale(${iconScale})`,
+                      }}
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div className="text-white/40 text-xs text-center px-2">
+                      暂无图标
+                    </div>
+                  )}
+                </div>
+                
+                {/* 缩放控制按钮 */}
+                <div className="flex flex-col gap-2">
+                  <Button
+                    size="small"
+                    icon={<ZoomInOutlined />}
+                    onClick={() => handleScaleChange(0.1)}
+                    disabled={iconScale >= 1.2}
+                    title="放大"
+                  />
+                  <Button
+                    size="small"
+                    icon={<ZoomOutOutlined />}
+                    onClick={() => handleScaleChange(-0.1)}
+                    disabled={iconScale <= 0.3}
+                    title="缩小"
+                  />
+                  <Button
+                    size="small"
+                    icon={<UndoOutlined />}
+                    onClick={handleResetScale}
+                    title="重置"
+                  />
+                </div>
+                
+                {/* 缩放比例显示 */}
+                <div className="text-sm text-gray-500">
+                  {Math.round(iconScale * 100)}%
+                </div>
+              </div>
+            </Form.Item>
+          </Col>
+          
+          <Col span={12}>
+            <Form.Item
+              label="背景"
+              name="backgroundColor"
+            >
+              <ColorPicker
+                presets={[
+                  {
+                    label: '预设颜色',
+                    colors: PRESET_COLORS,
+                  },
+                ]}
+                showText
+                format="hex"
+                onChange={handleBgColorChange}
+              />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Form.Item name="iconScale" hidden>
+          <Input type="number" />
         </Form.Item>
       </Form>
     </Modal>

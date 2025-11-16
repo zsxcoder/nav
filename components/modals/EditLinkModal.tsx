@@ -34,7 +34,7 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
   const [iconType, setIconType] = useState<'1' | '2'>('1'); // 1: Favicon, 2: 自定义
   const [previewIcon, setPreviewIcon] = useState<string>('');
   const [previewBgColor, setPreviewBgColor] = useState<string>(getDefaultColor());
-  const [iconScale, setIconScale] = useState<number>(0.8);
+  const [iconScale, setIconScale] = useState<number>(0.7);
   const [savedCustomIcon, setSavedCustomIcon] = useState<string>(''); // 保存自定义图标
   const categories = useAppSelector((state) => state.categories.items);
 
@@ -61,7 +61,7 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
       if (link) {
         // 编辑模式：填充现有数据
         const bgColor = link.backgroundColor || getDefaultColor();
-        const scale = link.iconScale || 0.8;
+        const scale = link.iconScale || 0.7;
         const iconUrl = link.icon || '';
         
         form.setFieldsValue({
@@ -92,12 +92,12 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
         form.setFieldsValue({
           category: defaultCategory,
           backgroundColor: defaultBg,
-          iconScale: 0.8,
+          iconScale: 0.7,
         });
         
         setPreviewIcon('');
         setPreviewBgColor(defaultBg);
-        setIconScale(0.8);
+        setIconScale(0.7);
         setIconType('1');
         setSavedCustomIcon('');
       }
@@ -174,8 +174,8 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
 
   // 重置缩放
   const handleResetScale = useCallback(() => {
-    setIconScale(0.8);
-    form.setFieldsValue({ iconScale: 0.8 });
+    setIconScale(0.7);
+    form.setFieldsValue({ iconScale: 0.7 });
   }, [form]);
 
   // 使用吸管工具选择颜色
@@ -227,7 +227,7 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
       form.resetFields();
       setPreviewIcon('');
       setPreviewBgColor(getDefaultColor());
-      setIconScale(0.8);
+      setIconScale(0.7);
       setIconType('1');
       setSavedCustomIcon('');
       setLoading(false);
@@ -242,7 +242,7 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
     form.resetFields();
     setPreviewIcon('');
     setPreviewBgColor(getDefaultColor());
-    setIconScale(0.8);
+    setIconScale(0.7);
     setIconType('1');
     setSavedCustomIcon('');
     onCancel();

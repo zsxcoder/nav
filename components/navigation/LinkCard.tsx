@@ -152,7 +152,7 @@ const LinkCardBase: React.FC<LinkCardProps> = ({ link, onEdit, onDelete, isDragg
   const renderIcon = React.useMemo(() => {
     // 获取 favicon URL 作为回退选项，使用 larger=true 获取更高质量的图标
     const faviconUrl = getFaviconUrl(link.url, { larger: true });
-    const scale = link.iconScale || 0.8;
+    const scale = link.iconScale || 0.7;
     const iconSize = Math.round(60 * scale);
 
     // 情况1: 用户提供了自定义图标 URL

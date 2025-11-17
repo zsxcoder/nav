@@ -85,6 +85,13 @@ const LinkGridBase: React.FC<LinkGridProps> = ({
       return searchResults;
     }
 
+    // 如果当前分类是"未分类"，显示所有没有分类的链接
+    if (currentCategory === '未分类') {
+      return links
+        .filter((link) => !link.category || link.category === '')
+        .sort((a, b) => a.order - b.order);
+    }
+
     // 根据分类过滤链接，并按 order 排序
     return links
       .filter((link) => link.category === currentCategory)

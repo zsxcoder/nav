@@ -68,7 +68,7 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
           name: link.name,
           url: link.url,
           description: link.description || '',
-          category: link.category || defaultCategory,
+          category: link.category || '', // 允许为空，不使用默认分类
           icon: iconUrl,
           backgroundColor: bgColor,
           iconScale: scale,
@@ -90,7 +90,7 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
         const defaultBg = getDefaultColor();
         form.resetFields();
         form.setFieldsValue({
-          category: defaultCategory,
+          category: '', // 新建时也不设置默认分类
           backgroundColor: defaultBg,
           iconScale: 0.7,
         });
@@ -116,7 +116,7 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
 
     // 只有在 Favicon 模式下才自动更新
     if (iconType === '1') {
-      const faviconUrl = getFaviconUrl(url);
+      const faviconUrl = getFaviconUrl(url, {larger: true});
       form.setFieldsValue({ icon: faviconUrl || '' });
       setPreviewIcon(faviconUrl || '');
     }
@@ -331,9 +331,11 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
         <Form.Item
           label="分类"
           name="category"
-          rules={[{ required: true, message: '请选择分类' }]}
         >
-          <Select placeholder="选择分类">
+          <Select 
+            placeholder="选择分类（可选）" 
+            allowClear
+          >
             {categories.map((category) => (
               <Select.Option key={category.id} value={category.name}>
                 <span className="mr-2">{renderIcon(category.icon)}</span>

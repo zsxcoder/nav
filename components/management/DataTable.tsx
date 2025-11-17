@@ -1,24 +1,12 @@
 'use client';
 
-import React, { useState, createContext, useContext, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Table, Button, Space, Popconfirm } from 'antd';
-import { EditOutlined, DeleteOutlined, DragOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import {
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  sortableKeyboardCoordinates,
-  useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import { Link } from '@/types/link';
+import { Category } from '@/types/category';
 import { useAppSelector } from '@/store/hooks';
-import { showSuccess } from '@/utils/feedback';
 
 // 树节点类型
 interface TreeNode {
@@ -38,71 +26,27 @@ interface TreeNode {
   children?: TreeNode[];
 }
 
-// 创建 Context 用于传递拖拽句柄
-const DragHandleContext = createContext<{
-  listeners?: any;
-  attributes?: any;
-}>({});
-
 interface DataTableProps {
   links: Link[];
   onEdit: (link: Link) => void;
   onDelete: (id: string) => void;
-  onBatchDelete: (ids: string[]) => void;
-  onReorder: (fromIndex: number, toIndex: number) => void;
+  onEditCategory: (category: Category) => void;
+  onDeleteCategory: (category: Category) => void;
   selectedRowKeys?: React.Key[];
   onSelectionChange?: (selectedKeys: React.Key[]) => void;
 }
 
 /**
- * 可拖拽的表格行组件
- */
-interface RowProps extends React.HTMLAttributes<HTMLTableRowElement> {
-  'data-row-key': string;
-}
-
-const DraggableRow: React.FC<RowProps> = (props) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: props['data-row-key'],
-  });
-
-  const style: React.CSSProperties = {
-    ...props.style,
-    transform: CSS.Transform.toString(transform),
-    transition,
-    ...(isDragging ? { position: 'relative', zIndex: 999 } : {}),
-  };
-
-  // 将拖拽监听器存储在 context 中，供子组件使用
-  return (
-    <DragHandleContext.Provider value={{ listeners, attributes }}>
-      <tr
-        {...props}
-        ref={setNodeRef}
-        style={style}
-      />
-    </DragHandleContext.Provider>
-  );
-};
-
-/**
  * 数据表格组件
- * 支持拖拽排序、行内编辑、批量删除
  * 使用树表格展示分类和链接的层级关系
+ * 支持批量选择、编辑和删除
  */
 export const DataTable: React.FC<DataTableProps> = ({
   links,
   onEdit,
   onDelete,
-  onBatchDelete,
-  onReorder,
+  onEditCategory,
+  onDeleteCategory,
   selectedRowKeys: externalSelectedRowKeys,
   onSelectionChange,
 }) => {
@@ -155,63 +99,61 @@ export const DataTable: React.FC<DataTableProps> = ({
       });
     });
 
+    // 添加未分类节点（如果有未分类的链接）
+    const uncategorizedLinks = links
+      .filter(link => !link.category || link.category === '')
+      .sort((a, b) => a.order - b.order)
+      .map(link => ({
+        key: link.id,
+        id: link.id,
+        name: link.name,
+        url: link.url,
+        description: link.description,
+        category: link.category,
+        backgroundColor: link.backgroundColor,
+        icon: link.icon,
+        iconScale: link.iconScale,
+        order: link.order,
+        createdAt: link.createdAt,
+        updatedAt: link.updatedAt,
+        isCategory: false,
+      }));
+
+    if (uncategorizedLinks.length > 0) {
+      tree.push({
+        key: 'category-uncategorized',
+        id: 'uncategorized',
+        name: '未分类',
+        icon: 'InboxOutlined',
+        order: 9999, // 放在最后
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        isCategory: true,
+        children: uncategorizedLinks,
+      });
+    }
+
     return tree.sort((a, b) => a.order - b.order);
   }, [links, categories]);
 
-  // 默认展开所有分类
+  // 默认展开所有分类（包括未分类）
   useEffect(() => {
     const allCategoryKeys = categories.map(cat => `category-${cat.id}`);
-    setExpandedRowKeys(allCategoryKeys);
-  }, [categories]);
-
-  // 配置拖拽传感器
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  // 处理拖拽结束
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (over && active.id !== over.id) {
-      const oldIndex = links.findIndex((link) => link.id === active.id);
-      const newIndex = links.findIndex((link) => link.id === over.id);
-
-      if (oldIndex !== -1 && newIndex !== -1) {
-        onReorder(oldIndex, newIndex);
-        showSuccess('排序已更新');
-      }
+    // 如果有未分类链接，也展开未分类节点
+    const hasUncategorized = links.some(link => !link.category || link.category === '');
+    if (hasUncategorized) {
+      allCategoryKeys.push('category-uncategorized');
     }
-  };
-
-
-
-  // 拖拽句柄组件
-  const DragHandle = () => {
-    const { listeners, attributes } = useContext(DragHandleContext);
-    return (
-      <div {...listeners} {...attributes} style={{ cursor: 'move', display: 'inline-block' }}>
-        <DragOutlined style={{ color: '#999' }} />
-      </div>
-    );
-  };
+    setExpandedRowKeys(allCategoryKeys);
+  }, [categories, links]);
 
   // 表格列定义
   const columns: ColumnsType<TreeNode> = [
     {
-      title: '',
-      key: 'drag',
-      width: 50,
-      render: () => <DragHandle />,
-    },
-    {
       title: '名称',
       dataIndex: 'name',
       key: 'name',
-      width: 200,
+      width: 160,
       ellipsis: true,
       render: (name: string, record: TreeNode) => (
         <span className={record.isCategory ? 'font-semibold text-base' : ''}>
@@ -223,7 +165,7 @@ export const DataTable: React.FC<DataTableProps> = ({
       title: '地址',
       dataIndex: 'url',
       key: 'url',
-      width: 250,
+      width: 200,
       ellipsis: true,
       render: (url: string, record: TreeNode) => 
         record.isCategory ? (
@@ -238,11 +180,11 @@ export const DataTable: React.FC<DataTableProps> = ({
       title: '描述',
       dataIndex: 'description',
       key: 'description',
-      width: 200,
+      width: 300,
       ellipsis: true,
       render: (description: string, record: TreeNode) => 
         record.isCategory ? (
-          <span className="text-gray-500">共 {record.children?.length || 0} 个链接</span>
+          <span className="text-gray-500">共 {record.children?.length || 0} 条链接</span>
         ) : (
           description
         ),
@@ -251,7 +193,7 @@ export const DataTable: React.FC<DataTableProps> = ({
       title: '背景颜色',
       dataIndex: 'backgroundColor',
       key: 'backgroundColor',
-      width: 140,
+      width: 100,
       render: (color: string, record: TreeNode) => 
         record.isCategory ? (
           <span className="text-gray-400">-</span>
@@ -270,10 +212,59 @@ export const DataTable: React.FC<DataTableProps> = ({
       key: 'action',
       width: 150,
       fixed: 'right',
-      render: (_, record: TreeNode) => 
-        record.isCategory ? (
-          <span className="text-gray-400">-</span>
-        ) : (
+      render: (_, record: TreeNode) => {
+        if (record.isCategory) {
+          // 未分类节点不允许编辑和删除
+          if (record.id === 'uncategorized') {
+            return <span className="text-gray-400">-</span>;
+          }
+          
+          // 分类节点的操作
+          const category: Category = {
+            id: record.id,
+            name: record.name,
+            icon: record.icon || 'AppstoreOutlined',
+            order: record.order,
+            createdAt: record.createdAt,
+            updatedAt: record.updatedAt,
+          };
+          
+          return (
+            <Space size="small">
+              <Button
+                type="link"
+                icon={<EditOutlined />}
+                onClick={() => onEditCategory(category)}
+                size="small"
+              >
+                编辑
+              </Button>
+              <Popconfirm
+                title={
+                  record.children && record.children.length > 0
+                    ? `该分类下有 ${record.children.length} 个链接，删除后这些链接的分类将被清空。确定要删除吗？`
+                    : '确定要删除这个分类吗？'
+                }
+                onConfirm={() => onDeleteCategory(category)}
+                okText="删除"
+                cancelText="取消"
+                okType="danger"
+              >
+                <Button
+                  type="link"
+                  danger
+                  icon={<DeleteOutlined />}
+                  size="small"
+                >
+                  删除
+                </Button>
+              </Popconfirm>
+            </Space>
+          );
+        }
+        
+        // 链接节点的操作
+        return (
           <Space size="small">
             <Button
               type="link"
@@ -299,7 +290,8 @@ export const DataTable: React.FC<DataTableProps> = ({
               </Button>
             </Popconfirm>
           </Space>
-        ),
+        );
+      },
     },
   ];
 
@@ -329,6 +321,11 @@ export const DataTable: React.FC<DataTableProps> = ({
         rowKey="key"
         size="middle"
         rowSelection={rowSelection}
+        rowClassName={(record) => 
+          record.isCategory 
+            ? 'category-row' 
+            : ''
+        }
         expandable={{
           expandedRowKeys,
           onExpandedRowsChange: (keys) => setExpandedRowKeys([...keys]),
@@ -338,7 +335,11 @@ export const DataTable: React.FC<DataTableProps> = ({
           current: currentPage,
           pageSize: pageSize,
           showSizeChanger: true,
-          showTotal: (total) => `共 ${total} 个分类`,
+          showTotal: (total) => {
+            const categoryCount = treeData.length;
+            const linkCount = links.length;
+            return `共 ${categoryCount} 个分类，${linkCount} 条链接`;
+          },
           onChange: (page, size) => {
             setCurrentPage(page);
             setPageSize(size);
@@ -346,7 +347,7 @@ export const DataTable: React.FC<DataTableProps> = ({
           pageSizeOptions: ['10', '20', '50', '100'],
         }}
         scroll={{ x: 1200 }}
-        className="[&_.ant-empty]:z-0"
+        className="[&_.ant-empty]:z-0 [&_.category-row>td]:bg-blue-50! [&_.category-row>td]:dark:bg-blue-900/30! [&_.category-row:hover>td]:bg-blue-100! [&_.category-row:hover>td]:dark:bg-blue-800/40!"
       />
     </div>
   );

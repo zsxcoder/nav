@@ -2,7 +2,7 @@
 
 import React, { useCallback, useMemo, memo, useState, useEffect } from 'react';
 import { Dropdown, Button } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, ProjectOutlined } from '@ant-design/icons';
 import * as Icons from '@ant-design/icons';
 import {
   DndContext,
@@ -289,10 +289,20 @@ const CategorySidebarBase: React.FC<CategorySidebarProps> = ({ className, style 
     return IconComponent ? <IconComponent /> : <Icons.AppstoreOutlined />;
   }, []);
 
+  // 计算未分类链接数量
+  const uncategorizedCount = useMemo(() => 
+    links.filter(link => !link.category || link.category === '').length
+  , [links]);
+
   // 排序后的分类列表
   const sortedCategories = useMemo(() => 
     [...categories].sort((a, b) => a.order - b.order)
   , [categories]);
+
+  // 处理点击未分类按钮
+  const handleUncategorizedClick = useCallback(() => {
+    dispatch(setCurrentCategory('未分类'));
+  }, [dispatch]);
 
   // 在挂载前不渲染菜单，避免 hydration 不匹配
   if (!mounted) {
@@ -345,8 +355,21 @@ const CategorySidebarBase: React.FC<CategorySidebarProps> = ({ className, style 
           </SortableContext>
         </DndContext>
         
-        {/* 添加分类按钮 */}
-        <div className="p-4 border-t text-sm border-gray-200 dark:border-neutral-700">
+        {/* 底部按钮区域 */}
+        <div className="p-4 border-t text-sm border-gray-200 dark:border-neutral-700 space-y-2">
+          {/* 未分类数据按钮 - 只在有未分类链接时显示 */}
+          {uncategorizedCount > 0 && (
+            <Button
+              icon={<ProjectOutlined />}
+              onClick={handleUncategorizedClick}
+              block
+              className={currentCategory === '未分类' ? 'bg-blue-50 border-blue-300 dark:bg-blue-900/30' : ''}
+            >
+              未分类({uncategorizedCount})
+            </Button>
+          )}
+          
+          {/* 添加分类按钮 */}
           <Button
             type="dashed"
             icon={<PlusOutlined />}

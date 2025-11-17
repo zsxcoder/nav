@@ -12,16 +12,18 @@ import {
 import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { addLink, updateLink, deleteLink, reorderLinks, resetLinks } from '@/store/slices/linksSlice';
-import { resetCategories, defaultCategories } from '@/store/slices/categoriesSlice';
+import { resetCategories, defaultCategories, updateCategory, deleteCategory } from '@/store/slices/categoriesSlice';
 import { DataTable } from '@/components/management/DataTable';
 import { EditLinkModal } from '@/components/modals/EditLinkModal';
+import { EditCategoryModal } from '@/components/modals/EditCategoryModal';
 import { ImportExport } from '@/components/management/ImportExport';
 import { ResetDataModal } from '@/components/modals/ResetDataModal';
 import { BatchCategoryModal } from '@/components/modals/BatchCategoryModal';
 import { Link } from '@/types/link';
+import { Category } from '@/types/category';
 import { defaultLinks } from '@/services/defaultData';
 import { storageService } from '@/services/storage';
-import { showSuccess, showError, showWarning } from '@/utils/feedback';
+import { showSuccess, showError, showWarning, showConfirm } from '@/utils/feedback';
 
 /**
  * 数据管理页面
@@ -35,6 +37,8 @@ export default function ManagePage() {
   const [mounted, setMounted] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [currentLink, setCurrentLink] = useState<Link | null>(null);
+  const [categoryEditModalOpen, setCategoryEditModalOpen] = useState(false);
+  const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
   const [resetModalOpen, setResetModalOpen] = useState(false);
   const [batchCategoryModalOpen, setBatchCategoryModalOpen] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
@@ -111,9 +115,71 @@ export default function ManagePage() {
     }
   };
 
-  // 处理拖拽排序
-  const handleReorder = (fromIndex: number, toIndex: number) => {
-    dispatch(reorderLinks({ fromIndex, toIndex }));
+  // 处理编辑分类
+  const handleEditCategory = (category: Category) => {
+    setCurrentCategory(category);
+    setCategoryEditModalOpen(true);
+  };
+
+  // 处理删除分类
+  const handleDeleteCategory = (category: Category) => {
+    // 查找该分类下的链接数量
+    const linksInCategory = links.filter(link => link.category === category.name);
+    
+    showConfirm({
+      title: '确认删除分类',
+      content: linksInCategory.length > 0 
+        ? `该分类下有 ${linksInCategory.length} 个链接，删除后这些链接的分类将被清空。确定要删除吗？`
+        : '确定要删除这个分类吗？',
+      okText: '删除',
+      cancelText: '取消',
+      okType: 'danger',
+      onOk: () => {
+        // 将该分类下的所有链接的分类字段置空
+        if (linksInCategory.length > 0) {
+          linksInCategory.forEach(link => {
+            dispatch(updateLink({
+              id: link.id,
+              category: '',
+            }));
+          });
+        }
+        
+        // 删除分类
+        dispatch(deleteCategory(category.id));
+        showSuccess('分类已删除');
+      },
+    });
+  };
+
+  // 处理分类编辑提交
+  const handleCategorySubmit = (data: { name: string; icon: string }) => {
+    if (currentCategory) {
+      try {
+        // 更新分类
+        const oldName = currentCategory.name;
+        dispatch(updateCategory({
+          id: currentCategory.id,
+          ...data,
+        }));
+        
+        // 更新所有使用该分类的链接
+        const linksToUpdate = links.filter(link => link.category === oldName);
+        linksToUpdate.forEach(link => {
+          dispatch(updateLink({
+            id: link.id,
+            category: data.name,
+          }));
+        });
+        
+        showSuccess('分类已更新');
+        setCategoryEditModalOpen(false);
+        setCurrentCategory(null);
+      } catch (error) {
+        console.error('更新分类失败:', error);
+        showError('更新失败，请重试');
+      }
+    }
   };
 
   // 处理添加新链接
@@ -303,19 +369,30 @@ export default function ManagePage() {
             links={links}
             onEdit={handleEdit}
             onDelete={handleDelete}
-            onBatchDelete={handleBatchDelete}
-            onReorder={handleReorder}
+            onEditCategory={handleEditCategory}
+            onDeleteCategory={handleDeleteCategory}
             selectedRowKeys={selectedRowKeys}
             onSelectionChange={setSelectedRowKeys}
           />
         </div>
 
-        {/* 编辑弹窗 */}
+        {/* 编辑链接弹窗 */}
         <EditLinkModal
           open={editModalOpen}
           link={currentLink}
           onCancel={handleModalCancel}
           onSubmit={handleModalSubmit}
+        />
+
+        {/* 编辑分类弹窗 */}
+        <EditCategoryModal
+          open={categoryEditModalOpen}
+          category={currentCategory}
+          onCancel={() => {
+            setCategoryEditModalOpen(false);
+            setCurrentCategory(null);
+          }}
+          onSubmit={handleCategorySubmit}
         />
 
         {/* 重置数据确认对话框 */}

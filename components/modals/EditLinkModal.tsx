@@ -367,7 +367,7 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
               <div className="flex items-center gap-3">
                 {/* 预览卡片 */}
                 <div 
-                  className="w-25 h-25 rounded-xl flex items-center justify-center relative overflow-hidden shadow-md transition-all"
+                  className="w-25 h-25 rounded-xl flex items-center justify-center relative overflow-hidden border border-input-border transition-all"
                   style={{ backgroundColor: previewBgColor }}
                 >
                   {previewIcon ? (

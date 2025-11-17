@@ -4,6 +4,8 @@
 
 @theme {
   --color-antd-dark: #141414;
+  --color-card-border: #f0f0f0;
+  --color-input-border: #d9d9d9;
 }
 
 /* CSS 自定义变量 - Light Theme */

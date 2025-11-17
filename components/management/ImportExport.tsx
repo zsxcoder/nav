@@ -65,7 +65,7 @@ export const ImportExport: React.FC = () => {
   const [fileList, setFileList] = useState<UploadFile[]>([]);
 
   /**
-   * 导出数据为 JSON 文件
+   * 导出数据为 JSON 文件（树结构格式）
    */
   const handleExport = () => {
     try {
@@ -74,12 +74,29 @@ export const ImportExport: React.FC = () => {
         return;
       }
 
-      // 导出新格式：包含 links 和 categories
+      // 构建树结构：将链接按分类组织
+      const categoryTree = categories.map(category => {
+        // 找到属于该分类的所有链接
+        const categoryLinks = links
+          .filter(link => link.category === category.name)
+          .sort((a, b) => a.order - b.order);
+
+        return {
+          id: category.id,
+          name: category.name,
+          icon: category.icon,
+          order: category.order,
+          createdAt: category.createdAt,
+          updatedAt: category.updatedAt,
+          links: categoryLinks,
+        };
+      });
+
+      // 导出树结构格式
       const exportData = {
-        links,
-        categories,
         version: '1.0',
         exportTime: Date.now(),
+        data: categoryTree,
       };
 
       const jsonData = JSON.stringify(exportData, null, 2);
@@ -91,7 +108,7 @@ export const ImportExport: React.FC = () => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `navigation-data-${Date.now()}.json`;
+      link.download = `weiz_nav_${Date.now()}.json`;
       
       // 触发下载
       document.body.appendChild(link);
@@ -165,14 +182,36 @@ export const ImportExport: React.FC = () => {
           return;
         }
 
-        // 验证是否为新格式（包含 links 和 categories）
-        if (!parsedData.links || !Array.isArray(parsedData.links)) {
+        let linksData: Link[] = [];
+        let categoriesData: Category[] = [];
+
+        // 判断数据格式：树结构 vs 扁平结构
+        if (parsedData.data && Array.isArray(parsedData.data)) {
+          // 新格式：树结构
+          parsedData.data.forEach((categoryNode: any) => {
+            // 提取分类信息
+            categoriesData.push({
+              id: categoryNode.id,
+              name: categoryNode.name,
+              icon: categoryNode.icon,
+              order: categoryNode.order,
+              createdAt: categoryNode.createdAt,
+              updatedAt: categoryNode.updatedAt,
+            });
+
+            // 提取该分类下的链接
+            if (categoryNode.links && Array.isArray(categoryNode.links)) {
+              linksData.push(...categoryNode.links);
+            }
+          });
+        } else if (parsedData.links && Array.isArray(parsedData.links)) {
+          // 旧格式：扁平结构（兼容）
+          linksData = parsedData.links;
+          categoriesData = parsedData.categories || [];
+        } else {
           showError('文件格式不正确，请确保是有效的导航数据');
           return;
         }
-
-        const linksData = parsedData.links;
-        const categoriesData = parsedData.categories || [];
 
         // 验证链接数据格式
         if (!validateLinkData(linksData)) {

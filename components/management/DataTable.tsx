@@ -1,12 +1,10 @@
 'use client';
 
-import React, { useState, createContext, useContext } from 'react';
-import { Table, Button, Space, Popconfirm, Tag } from 'antd';
+import React, { useState, createContext, useContext, useMemo, useEffect } from 'react';
+import { Table, Button, Space, Popconfirm } from 'antd';
 import { EditOutlined, DeleteOutlined, DragOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import {
-  DndContext,
-  closestCenter,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -14,14 +12,31 @@ import {
   DragEndEvent,
 } from '@dnd-kit/core';
 import {
-  SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
-  verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Link } from '@/types/link';
+import { useAppSelector } from '@/store/hooks';
 import { showSuccess } from '@/utils/feedback';
+
+// 树节点类型
+interface TreeNode {
+  key: string;
+  id: string;
+  name: string;
+  url?: string;
+  description?: string;
+  category?: string;
+  backgroundColor?: string;
+  icon?: string;
+  iconScale?: number;
+  order: number;
+  createdAt: number;
+  updatedAt: number;
+  isCategory?: boolean;
+  children?: TreeNode[];
+}
 
 // 创建 Context 用于传递拖拽句柄
 const DragHandleContext = createContext<{
@@ -80,6 +95,7 @@ const DraggableRow: React.FC<RowProps> = (props) => {
 /**
  * 数据表格组件
  * 支持拖拽排序、行内编辑、批量删除
+ * 使用树表格展示分类和链接的层级关系
  */
 export const DataTable: React.FC<DataTableProps> = ({
   links,
@@ -93,9 +109,60 @@ export const DataTable: React.FC<DataTableProps> = ({
   const [internalSelectedRowKeys, setInternalSelectedRowKeys] = useState<React.Key[]>([]);
   const [pageSize, setPageSize] = useState(100);
   const [currentPage, setCurrentPage] = useState(1);
+  const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
+
+  // 获取分类数据
+  const categories = useAppSelector((state) => state.categories.items);
 
   // 使用外部传入的 selectedRowKeys 或内部状态
   const selectedRowKeys = externalSelectedRowKeys !== undefined ? externalSelectedRowKeys : internalSelectedRowKeys;
+
+  // 构建树形数据结构
+  const treeData = useMemo(() => {
+    const tree: TreeNode[] = [];
+
+    // 按分类组织链接
+    categories.forEach(category => {
+      const categoryLinks = links
+        .filter(link => link.category === category.name)
+        .sort((a, b) => a.order - b.order)
+        .map(link => ({
+          key: link.id,
+          id: link.id,
+          name: link.name,
+          url: link.url,
+          description: link.description,
+          category: link.category,
+          backgroundColor: link.backgroundColor,
+          icon: link.icon,
+          iconScale: link.iconScale,
+          order: link.order,
+          createdAt: link.createdAt,
+          updatedAt: link.updatedAt,
+          isCategory: false,
+        }));
+
+      tree.push({
+        key: `category-${category.id}`,
+        id: category.id,
+        name: category.name,
+        icon: category.icon,
+        order: category.order,
+        createdAt: category.createdAt,
+        updatedAt: category.updatedAt,
+        isCategory: true,
+        children: categoryLinks,
+      });
+    });
+
+    return tree.sort((a, b) => a.order - b.order);
+  }, [links, categories]);
+
+  // 默认展开所有分类
+  useEffect(() => {
+    const allCategoryKeys = categories.map(cat => `category-${cat.id}`);
+    setExpandedRowKeys(allCategoryKeys);
+  }, [categories]);
 
   // 配置拖拽传感器
   const sensors = useSensors(
@@ -132,17 +199,8 @@ export const DataTable: React.FC<DataTableProps> = ({
     );
   };
 
-  // 获取所有唯一的分类用于筛选
-  const categoryFilters = React.useMemo(() => {
-    const categories = Array.from(new Set(links.map(link => link.category || '未分类')));
-    return categories.map(category => ({
-      text: category,
-      value: category,
-    }));
-  }, [links]);
-
   // 表格列定义
-  const columns: ColumnsType<Link> = [
+  const columns: ColumnsType<TreeNode> = [
     {
       title: '',
       key: 'drag',
@@ -153,140 +211,143 @@ export const DataTable: React.FC<DataTableProps> = ({
       title: '名称',
       dataIndex: 'name',
       key: 'name',
-      width: 120,
+      width: 200,
       ellipsis: true,
+      render: (name: string, record: TreeNode) => (
+        <span className={record.isCategory ? 'font-semibold text-base' : ''}>
+          {name}
+        </span>
+      ),
     },
     {
       title: '地址',
       dataIndex: 'url',
       key: 'url',
-      width: 200,
+      width: 250,
       ellipsis: true,
-      render: (url: string) => (
-        <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">
-          {url}
-        </a>
-      ),
+      render: (url: string, record: TreeNode) => 
+        record.isCategory ? (
+          <span className="text-gray-400">-</span>
+        ) : url ? (
+          <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">
+            {url}
+          </a>
+        ) : null,
     },
     {
       title: '描述',
       dataIndex: 'description',
       key: 'description',
-      width: 240,
+      width: 200,
       ellipsis: true,
-    },
-    {
-      title: '分类',
-      dataIndex: 'category',
-      key: 'category',
-      width: 100,
-      filters: categoryFilters,
-      onFilter: (value, record) => (record.category || '未分类') === value,
-      render: (category: string) => (
-        <Tag color="blue">{category || '未分类'}</Tag>
-      ),
+      render: (description: string, record: TreeNode) => 
+        record.isCategory ? (
+          <span className="text-gray-500">共 {record.children?.length || 0} 个链接</span>
+        ) : (
+          description
+        ),
     },
     {
       title: '背景颜色',
       dataIndex: 'backgroundColor',
       key: 'backgroundColor',
-      width: 120,
-      render: (color: string) => (
-        <div className="flex items-center gap-2">
-          <div
-            className="w-6 h-6 rounded border border-gray-300"
-            style={{ backgroundColor: color || '#bae0ff' }}
-          />
-          <span className="text-xs text-gray-500">{color || '#bae0ff'}</span>
-        </div>
-      ),
+      width: 140,
+      render: (color: string, record: TreeNode) => 
+        record.isCategory ? (
+          <span className="text-gray-400">-</span>
+        ) : (
+          <div className="flex items-center gap-2">
+            <div
+              className="w-6 h-6 rounded border border-gray-300"
+              style={{ backgroundColor: color || '#d9d9d9' }}
+            />
+            <span className="text-xs text-gray-500">{color || '#d9d9d9'}</span>
+          </div>
+        ),
     },
     {
       title: '操作',
       key: 'action',
       width: 150,
       fixed: 'right',
-      render: (_, record) => (
-        <Space size="small">
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => onEdit(record)}
-            size="small"
-          >
-            编辑
-          </Button>
-          <Popconfirm
-            title="确定要删除这个链接吗？"
-            onConfirm={() => onDelete(record.id)}
-            okText="确定"
-            cancelText="取消"
-          >
+      render: (_, record: TreeNode) => 
+        record.isCategory ? (
+          <span className="text-gray-400">-</span>
+        ) : (
+          <Space size="small">
             <Button
               type="link"
-              danger
-              icon={<DeleteOutlined />}
+              icon={<EditOutlined />}
+              onClick={() => onEdit(record as unknown as Link)}
               size="small"
             >
-              删除
+              编辑
             </Button>
-          </Popconfirm>
-        </Space>
-      ),
+            <Popconfirm
+              title="确定要删除这个链接吗？"
+              onConfirm={() => onDelete(record.id)}
+              okText="确定"
+              cancelText="取消"
+            >
+              <Button
+                type="link"
+                danger
+                icon={<DeleteOutlined />}
+                size="small"
+              >
+                删除
+              </Button>
+            </Popconfirm>
+          </Space>
+        ),
     },
   ];
 
-  // 行选择配置
+  // 行选择配置 - 只允许选择链接，不允许选择分类
   const rowSelection = {
     selectedRowKeys,
     onChange: (newSelectedRowKeys: React.Key[]) => {
+      // 过滤掉分类节点
+      const linkKeys = newSelectedRowKeys.filter(key => !String(key).startsWith('category-'));
       if (onSelectionChange) {
-        onSelectionChange(newSelectedRowKeys);
+        onSelectionChange(linkKeys);
       } else {
-        setInternalSelectedRowKeys(newSelectedRowKeys);
+        setInternalSelectedRowKeys(linkKeys);
       }
     },
+    getCheckboxProps: (record: TreeNode) => ({
+      disabled: record.isCategory, // 禁用分类节点的复选框
+    }),
   };
 
   return (
     <div>
-      {/* 数据表格 */}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext
-          items={links.map((link) => link.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          <Table
-            columns={columns}
-            dataSource={links}
-            rowKey="id"
-            size="middle"
-            rowSelection={rowSelection}
-            components={{
-              body: {
-                row: DraggableRow,
-              },
-            }}
-            pagination={{
-              current: currentPage,
-              pageSize: pageSize,
-              showSizeChanger: true,
-              showTotal: (total) => `共 ${total} 条`,
-              onChange: (page, size) => {
-                setCurrentPage(page);
-                setPageSize(size);
-              },
-              pageSizeOptions: ['50', '100', '150', '200'],
-            }}
-            scroll={{ x: 1200 }}
-            className="[&_.ant-empty]:z-0"
-          />
-        </SortableContext>
-      </DndContext>
+      {/* 树形数据表格 */}
+      <Table
+        columns={columns}
+        dataSource={treeData}
+        rowKey="key"
+        size="middle"
+        rowSelection={rowSelection}
+        expandable={{
+          expandedRowKeys,
+          onExpandedRowsChange: (keys) => setExpandedRowKeys([...keys]),
+          defaultExpandAllRows: true,
+        }}
+        pagination={{
+          current: currentPage,
+          pageSize: pageSize,
+          showSizeChanger: true,
+          showTotal: (total) => `共 ${total} 个分类`,
+          onChange: (page, size) => {
+            setCurrentPage(page);
+            setPageSize(size);
+          },
+          pageSizeOptions: ['10', '20', '50', '100'],
+        }}
+        scroll={{ x: 1200 }}
+        className="[&_.ant-empty]:z-0"
+      />
     </div>
   );
 };

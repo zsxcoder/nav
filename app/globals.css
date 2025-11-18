@@ -338,3 +338,62 @@ select:focus-visible {
 .dark .category-row:hover > td {
   background-color: rgba(30, 64, 175, 0.4) !important;
 }
+
+/* PWA 安装提示动画 */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* PWA 离线提示 */
+.offline-indicator {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ff4d4f;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  animation: slide-up 0.3s ease-out;
+}
+
+/* PWA 更新提示 */
+.update-prompt {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--primary);
+  color: white;
+  padding: 16px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(24, 144, 255, 0.3);
+  z-index: 1000;
+  animation: slide-up 0.3s ease-out;
+}
+
+/* 安装成功动画 */
+@keyframes success-bounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.install-success {
+  animation: success-bounce 0.5s ease-in-out;
+}

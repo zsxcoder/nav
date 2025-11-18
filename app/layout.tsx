@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import Providers from '@/components/Providers';
+import RegisterServiceWorker from './register-sw';
 import '@ant-design/v5-patch-for-react-19';
 
 export const metadata: Metadata = {
@@ -77,6 +78,7 @@ export default function RootLayout({
           跳转到主内容
         </a>
         <Providers>
+          <RegisterServiceWorker />
           {children}
         </Providers>
       </body>

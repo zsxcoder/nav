@@ -14,6 +14,7 @@ import { LinkGrid } from '@/components/navigation/LinkGrid';
 import { LinkGridSkeleton } from '@/components/navigation/LinkGridSkeleton';
 import { EditLinkModal } from '@/components/modals/EditLinkModal';
 import { ConfirmModal } from '@/components/modals/ConfirmModal';
+import InstallPrompt from '@/components/common/InstallPrompt';
 import { Link } from '@/types/link';
 
 /**
@@ -219,6 +220,9 @@ export default function Home() {
         cancelText="取消"
         okType="danger"
       />
+
+      {/* PWA 安装提示 */}
+      <InstallPrompt />
     </div>
   );
 }

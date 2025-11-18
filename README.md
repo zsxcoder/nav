@@ -2,6 +2,8 @@
 
 现代化的个人前端导航网站，基于 Next.js 15 构建。
 
+> 🚀 **快速部署**：查看 [QUICKSTART.md](./QUICKSTART.md) 了解如何在 5 分钟内部署到 Cloudflare Pages
+
 ## 技术栈
 
 - **框架**: Next.js 15.x (App Router)
@@ -41,6 +43,26 @@ pnpm build
 ```bash
 pnpm start
 ```
+
+### 部署
+
+```bash
+# 构建静态文件
+pnpm build
+
+# 本地预览静态文件
+pnpm serve:static
+
+# 部署到 Cloudflare Pages（推荐）
+pnpm deploy
+
+# 或部署到 Vercel
+pnpm deploy:vercel
+```
+
+详细的部署指南请查看 [DEPLOYMENT.md](./.kiro/specs/frontend-navigation-site/DEPLOYMENT.md)
+
+**推荐使用 Cloudflare Pages**：免费额度大，中国访问速度快，全球 CDN
 
 ## 项目结构
 

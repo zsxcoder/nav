@@ -79,7 +79,6 @@ export default function ThemeToggle() {
         onClick={toggleTheme}
         className="transition-theme flex items-center justify-center"
         aria-label={getTooltipTitle()}
-        aria-pressed={isDark}
         role="switch"
         aria-checked={isDark}
         style={{

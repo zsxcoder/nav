@@ -327,36 +327,38 @@ const CategorySidebarBase: React.FC<CategorySidebarProps> = ({ className, style 
       role="navigation"
       aria-label="分类导航"
     >
-      <div className="flex flex-col h-full">
-        {/* 拖拽分类列表 */}
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-          modifiers={[restrictToSidebar]}
-        >
-          <SortableContext
-            items={sortedCategories.map((cat) => cat.id)}
-            strategy={verticalListSortingStrategy}
+      <div className="flex flex-col h-full overflow-hidden">
+        {/* 拖拽分类列表 - 可滚动区域 */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+            modifiers={[restrictToSidebar]}
           >
-            <div className="flex-1 p-4 space-y-2 overflow-y-auto">
-              {sortedCategories.map((category) => (
-                <DraggableCategoryItem
-                  key={category.id}
-                  category={category}
-                  isSelected={currentCategory === category.name}
-                  onSelect={handleCategoryChange}
-                  onEdit={handleEditCategory}
-                  onDelete={handleDeleteCategory}
-                  renderIcon={renderIcon}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
+            <SortableContext
+              items={sortedCategories.map((cat) => cat.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="p-4 space-y-2">
+                {sortedCategories.map((category) => (
+                  <DraggableCategoryItem
+                    key={category.id}
+                    category={category}
+                    isSelected={currentCategory === category.name}
+                    onSelect={handleCategoryChange}
+                    onEdit={handleEditCategory}
+                    onDelete={handleDeleteCategory}
+                    renderIcon={renderIcon}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
+        </div>
         
-        {/* 底部按钮区域 */}
-        <div className="p-4 border-t text-sm border-gray-200 dark:border-neutral-700 space-y-2">
+        {/* 底部按钮区域 - 固定在底部 */}
+        <div className="flex-none p-4 border-t text-sm border-gray-200 dark:border-neutral-700 space-y-2 bg-white dark:bg-antd-dark">
           {/* 未分类数据按钮 - 只在有未分类链接时显示 */}
           {uncategorizedCount > 0 && (
             <Button

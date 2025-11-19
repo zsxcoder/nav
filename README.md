@@ -42,8 +42,16 @@ Next.js 15 · TypeScript 5 · Tailwind CSS 4 · Ant Design 5 · Redux Toolkit ·
 ## 🚀 快速开始
 
 ```bash
+# 克隆项目
+git clone <repository-url>
+cd frontend-navigation-site
+
 # 安装依赖
 pnpm install
+
+# 配置环境变量（可选）
+cp .env.example .env.local
+# 编辑 .env.local 设置你的网站 URL
 
 # 启动开发服务器
 pnpm dev

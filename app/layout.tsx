@@ -5,6 +5,7 @@ import RegisterServiceWorker from './register-sw';
 import '@ant-design/v5-patch-for-react-19';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://nav.weizwz.com'),
   title: {
     default: '唯知导航',
     template: '%s | 唯知导航',

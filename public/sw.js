@@ -1,7 +1,7 @@
 // Service Worker for PWA
-const CACHE_NAME = 'weiz-nav-v2';
-const RUNTIME_CACHE = 'weiz-nav-runtime-v2';
-const IMAGE_CACHE = 'weiz-nav-images-v2';
+const CACHE_NAME = 'weiz-nav-v3';
+const RUNTIME_CACHE = 'weiz-nav-runtime-v3';
+const IMAGE_CACHE = 'weiz-nav-images-v3';
 
 // 需要预缓存的静态资源
 const PRECACHE_URLS = [
@@ -25,20 +25,33 @@ self.addEventListener('install', (event) => {
 // 激活事件 - 清理旧缓存
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((cacheName) => {
-            return cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE && cacheName !== IMAGE_CACHE;
-          })
-          .map((cacheName) => {
-            return caches.delete(cacheName);
-          })
-      );
-    })
+    Promise.all([
+      // 清理旧缓存
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames
+            .filter((cacheName) => {
+              return cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE && cacheName !== IMAGE_CACHE;
+            })
+            .map((cacheName) => {
+              console.log('删除旧缓存:', cacheName);
+              return caches.delete(cacheName);
+            })
+        );
+      }),
+      // 立即控制所有页面
+      self.clients.claim(),
+      // 通知所有客户端刷新
+      self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({
+            type: 'CACHE_UPDATED',
+            version: CACHE_NAME,
+          });
+        });
+      }),
+    ])
   );
-  // 立即控制所有页面
-  self.clients.claim();
 });
 
 // 判断是否是图片请求

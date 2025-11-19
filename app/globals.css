@@ -397,3 +397,40 @@ select:focus-visible {
 .install-success {
   animation: success-bounce 0.5s ease-in-out;
 }
+
+/* 固定布局样式 */
+.h-screen {
+  height: 100vh;
+  height: 100dvh; /* 动态视口高度，移动端更准确 */
+}
+
+/* 确保 body 和 html 不会滚动 */
+html, body {
+  overflow: hidden;
+  height: 100%;
+}
+
+/* 只允许内容区域滚动 */
+#main-content {
+  scroll-behavior: smooth;
+}
+
+/* 优化滚动性能 */
+#main-content {
+  -webkit-overflow-scrolling: touch; /* iOS 平滑滚动 */
+  overscroll-behavior: contain; /* 防止滚动链 */
+}
+
+/* 侧边栏滚动优化 */
+aside {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* 移动端优化 */
+@media (max-width: 1023px) {
+  /* 移动端允许整体滚动 */
+  html, body {
+    overflow: auto;
+  }
+}

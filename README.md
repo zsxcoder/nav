@@ -42,8 +42,16 @@ Next.js 15 · TypeScript 5 · Tailwind CSS 4 · Ant Design 5 · Redux Toolkit ·
 ## 🚀 快速开始
 
 ```bash
+# 克隆项目
+git clone <repository-url>
+cd frontend-navigation-site
+
 # 安装依赖
 pnpm install
+
+# 配置环境变量（可选）
+cp .env.example .env.local
+# 编辑 .env.local 设置你的网站 URL
 
 # 启动开发服务器
 pnpm dev
@@ -80,6 +88,7 @@ pnpm deploy
 - [快速开始](./.kiro/specs/frontend-navigation-site/QUICKSTART.md) - 5 分钟快速部署
 - [部署指南](./.kiro/specs/frontend-navigation-site/DEPLOYMENT.md) - 详细部署说明
 - [PWA 使用指南](./.kiro/specs/frontend-navigation-site/PWA_GUIDE.md) - PWA 安装和使用
+- [缓存清除指南](./.kiro/specs/frontend-navigation-site/CACHE_CLEAR_GUIDE.md) - 解决缓存问题
 
 **开发文档**
 - [需求文档](./.kiro/specs/frontend-navigation-site/requirements.md) - 功能需求

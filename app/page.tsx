@@ -146,19 +146,21 @@ export default function Home() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-(--background) transition-theme">
-      {/* 页头组件 */}
-      <Header onMenuClick={() => setDrawerOpen(true)} />
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-(--background) transition-theme overflow-hidden">
+      {/* 固定顶部 Header */}
+      <div className="flex-none">
+        <Header onMenuClick={() => setDrawerOpen(true)} />
+      </div>
       
-      {/* 主内容区域 */}
-      <div className="flex-1 flex overflow-hidden relative">
+      {/* 主内容区域 - 固定高度，内部滚动 */}
+      <div className="flex-1 flex overflow-hidden">
 
-        {/* 左侧分类导航 - Desktop */}
+        {/* 左侧分类导航 - Desktop - 固定，内部滚动 */}
         <aside 
-          className="hidden lg:block w-48 bg-white dark:bg-antd-dark border-r border-gray-200 dark:border-neutral-700 overflow-y-auto transition-theme"
+          className="hidden lg:flex flex-col w-48 bg-white dark:bg-antd-dark border-r border-gray-200 dark:border-neutral-700 transition-theme overflow-hidden"
           aria-label="分类导航侧边栏"
         >
-          <CategorySidebar style={{height: '100%'}} />
+          <CategorySidebar className="h-full" />
         </aside>
 
         {/* 移动端抽屉 - 分类导航 */}
@@ -169,11 +171,14 @@ export default function Home() {
           open={drawerOpen}
           className="lg:hidden"
           width={280}
+          styles={{
+            body: { padding: 0, height: '100%' }
+          }}
         >
-          <CategorySidebar />
+          <CategorySidebar className="h-full" />
         </Drawer>
 
-        {/* 右侧内容区域 */}
+        {/* 右侧内容区域 - 只有这里滚动 */}
         <main 
           id="main-content" 
           className="flex-1 overflow-y-auto overflow-x-hidden"

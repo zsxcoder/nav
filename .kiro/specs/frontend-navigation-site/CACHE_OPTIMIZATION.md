@@ -28,11 +28,15 @@
 **图片属性优化**
 ```html
 <img 
-  loading="lazy"           <!-- 懒加载，视口外的图片不加载 -->
-  decoding="async"         <!-- 异步解码，不阻塞渲染 -->
-  crossOrigin="anonymous"  <!-- 允许跨域缓存 -->
+  loading="lazy"      <!-- 懒加载，视口外的图片不加载 -->
+  decoding="async"    <!-- 异步解码，不阻塞渲染 -->
 />
 ```
+
+**注意**：不使用 `crossOrigin="anonymous"`，因为：
+- favicon.im 的 302 重定向不支持 CORS
+- 会导致图片加载失败
+- Service Worker 可以缓存跨域图片，无需此属性
 
 ### 3. React 组件优化
 
@@ -154,6 +158,23 @@ navigator.storage.estimate().then(estimate => {
 
 ## 故障排除
 
+### 问题：图标加载失败（CORS 错误）
+
+**错误信息**：
+```
+Access to image at 'https://favicon.im/...' has been blocked by CORS policy
+```
+
+**原因**：
+- favicon.im 使用 302 重定向
+- 重定向时不会传递 CORS 头
+- `crossOrigin="anonymous"` 会触发 CORS 检查
+
+**解决方案**：
+- ✅ 已移除 `crossOrigin="anonymous"` 属性
+- ✅ Service Worker 仍然可以缓存图片
+- ✅ 浏览器原生缓存也会工作
+
 ### 问题：图标还是重复加载
 
 **可能原因 1：Service Worker 未激活**
@@ -219,15 +240,11 @@ fetch(request).then(response => {
 
 ### 跨域图片缓存
 
-```html
-<!-- crossOrigin="anonymous" 允许缓存跨域图片 -->
-<img crossOrigin="anonymous" src="https://favicon.im/..." />
-```
-
 **注意事项**：
-- 需要服务器支持 CORS
-- favicon.im 已支持 CORS
-- 自定义图标服务器需要配置 CORS
+- ~~不使用 `crossOrigin="anonymous"`~~ - 会导致 CORS 错误
+- favicon.im 的重定向不支持 CORS
+- Service Worker 可以缓存跨域图片（无需 crossOrigin）
+- 浏览器原生缓存也会自动缓存图片
 
 ## 相关资源
 

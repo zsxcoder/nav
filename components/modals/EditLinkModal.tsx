@@ -10,6 +10,7 @@ import { PRESET_COLORS, isValidColor, getDefaultColor } from '@/utils/colorUtils
 import { getFaviconUrl } from '@/api/favicon';
 import { showError } from '@/utils/feedback';
 import { useAppSelector } from '@/store/hooks';
+import { IconifySelector } from './IconifySelector';
 
 interface EditLinkModalProps {
   open: boolean;
@@ -30,11 +31,12 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
 }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [iconType, setIconType] = useState<'1' | '2'>('1'); // 1: Favicon, 2: 自定义
+  const [iconType, setIconType] = useState<'1' | '2' | '3'>('1'); // 1: Favicon, 2: 自定义, 3: Iconify
   const [previewIcon, setPreviewIcon] = useState<string>('');
   const [previewBgColor, setPreviewBgColor] = useState<string>(getDefaultColor());
   const [iconScale, setIconScale] = useState<number>(0.7);
   const [savedCustomIcon, setSavedCustomIcon] = useState<string>(''); // 保存自定义图标
+  const [savedIconifyIcon, setSavedIconifyIcon] = useState<string>(''); // 保存 Iconify 图标
   const categories = useAppSelector((state) => state.categories.items);
 
   // 检查是否支持 EyeDropper API
@@ -83,7 +85,10 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
         setIconScale(scale);
         
         // 判断图标类型
-        if (iconUrl && !iconUrl.includes('favicon.im')) {
+        if (iconUrl && iconUrl.includes('api.iconify.design')) {
+          setIconType('3');
+          setSavedIconifyIcon(iconUrl); // 保存 Iconify 图标
+        } else if (iconUrl && !iconUrl.includes('favicon.im')) {
           setIconType('2');
           setSavedCustomIcon(iconUrl); // 保存自定义图标
         } else {
@@ -104,6 +109,7 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
         setIconScale(0.7);
         setIconType('1');
         setSavedCustomIcon('');
+        setSavedIconifyIcon('');
       }
     }
   }, [open, link, form, defaultCategory]);
@@ -127,14 +133,18 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
   }, [iconType, form]);
 
   // 处理图标类型切换
-  const handleIconTypeChange = useCallback((value: '1' | '2') => {
+  const handleIconTypeChange = useCallback((value: '1' | '2' | '3') => {
     setIconType(value);
     
     if (value === '1') {
-      // 切换到 Favicon 模式，保存当前自定义图标并自动获取 favicon
+      // 切换到 Favicon 模式，保存当前图标并自动获取 favicon
       const currentIcon = form.getFieldValue('icon');
-      if (currentIcon && !currentIcon.includes('favicon.im')) {
-        setSavedCustomIcon(currentIcon);
+      if (currentIcon) {
+        if (currentIcon.includes('api.iconify.design')) {
+          setSavedIconifyIcon(currentIcon);
+        } else if (!currentIcon.includes('favicon.im')) {
+          setSavedCustomIcon(currentIcon);
+        }
       }
       
       const url = form.getFieldValue('url');
@@ -143,13 +153,18 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
         form.setFieldsValue({ icon: faviconUrl || '' });
         setPreviewIcon(faviconUrl || '');
       }
-    } else {
+    } else if (value === '2') {
       // 切换到自定义模式，恢复之前保存的自定义图标
       const iconToRestore = savedCustomIcon || '';
       form.setFieldsValue({ icon: iconToRestore });
       setPreviewIcon(iconToRestore);
+    } else if (value === '3') {
+      // 切换到 Iconify 模式，恢复之前保存的 Iconify 图标
+      const iconToRestore = savedIconifyIcon || '';
+      form.setFieldsValue({ icon: iconToRestore });
+      setPreviewIcon(iconToRestore);
     }
-  }, [form, savedCustomIcon]);
+  }, [form, savedCustomIcon, savedIconifyIcon]);
 
   // 处理图标 URL 输入
   const handleIconUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,6 +176,13 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
       setSavedCustomIcon(iconUrl);
     }
   }, [form, iconType]);
+
+  // 处理 Iconify 图标选择
+  const handleIconifyChange = useCallback((iconUrl: string) => {
+    form.setFieldsValue({ icon: iconUrl });
+    setPreviewIcon(iconUrl);
+    setSavedIconifyIcon(iconUrl);
+  }, [form]);
 
   // 处理背景色变化
   const handleBgColorChange = useCallback((color: Color) => {
@@ -234,6 +256,7 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
       setIconScale(0.7);
       setIconType('1');
       setSavedCustomIcon('');
+      setSavedIconifyIcon('');
       setLoading(false);
     } catch (error) {
       // 表单验证失败，界面已有提示
@@ -249,6 +272,7 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
     setIconScale(0.7);
     setIconType('1');
     setSavedCustomIcon('');
+    setSavedIconifyIcon('');
     onCancel();
   };
 
@@ -259,6 +283,10 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
     },
     {
       value: '2',
+      label: 'Iconify图标',
+    },
+    {
+      value: '3',
       label: '自定义图标',
     },
   ];
@@ -349,20 +377,29 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
         </Form.Item>
 
         <Form.Item label="图标">
-          <Space.Compact className='w-full'>
+          <Space.Compact className='w-full flex'>
             <Select 
-              className='w-32 flex-1' 
+              className='w-32!' 
               value={iconType}
               onChange={handleIconTypeChange}
               options={iconOptions} 
             />
-            <Form.Item name="icon" noStyle>
-              <Input 
-                placeholder={iconType === '1' ? '自动获取' : '输入图标 URL'}
-                disabled={iconType === '1'}
-                onChange={handleIconUrlChange}
-              />
-            </Form.Item>
+            {iconType === '2' ? (
+              <Form.Item name="icon" className="flex-1">
+                <IconifySelector
+                  value={form.getFieldValue('icon')}
+                  onChange={handleIconifyChange}
+                />
+              </Form.Item>
+            ) : (
+              <Form.Item name="icon" className="flex-1">
+                <Input 
+                  placeholder={iconType === '1' ? '自动获取' : '输入图标 URL'}
+                  disabled={iconType === '1'}
+                  onChange={handleIconUrlChange}
+                />
+              </Form.Item>
+            )}
           </Space.Compact>
         </Form.Item>
 

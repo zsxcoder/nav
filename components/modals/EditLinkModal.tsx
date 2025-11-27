@@ -31,12 +31,13 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
 }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [iconType, setIconType] = useState<'1' | '2' | '3'>('1'); // 1: Favicon, 2: 自定义, 3: Iconify
+  const [iconType, setIconType] = useState<'1' | '2' | '3'>('1'); // 1: Favicon, 2: Iconify, 3: 自定义
   const [previewIcon, setPreviewIcon] = useState<string>('');
   const [previewBgColor, setPreviewBgColor] = useState<string>(getDefaultColor());
   const [iconScale, setIconScale] = useState<number>(0.7);
   const [savedCustomIcon, setSavedCustomIcon] = useState<string>(''); // 保存自定义图标
   const [savedIconifyIcon, setSavedIconifyIcon] = useState<string>(''); // 保存 Iconify 图标
+  const [iconifyColor, setIconifyColor] = useState<string>(''); // Iconify 图标颜色
   const categories = useAppSelector((state) => state.categories.items);
 
   // 检查是否支持 EyeDropper API
@@ -86,13 +87,17 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
         
         // 判断图标类型
         if (iconUrl && iconUrl.includes('api.iconify.design')) {
-          setIconType('3');
+          setIconType('2'); // Iconify 图标
+          // 提取颜色参数
+          const urlParams = new URLSearchParams(iconUrl.split('?')[1]);
+          const color = urlParams.get('color') || '';
+          setIconifyColor(color);
           setSavedIconifyIcon(iconUrl); // 保存 Iconify 图标
         } else if (iconUrl && !iconUrl.includes('favicon.im')) {
-          setIconType('2');
+          setIconType('3'); // 自定义图标
           setSavedCustomIcon(iconUrl); // 保存自定义图标
         } else {
-          setIconType('1');
+          setIconType('1'); // Favicon 图标
         }
       } else {
         // 添加模式：重置表单，使用第一个分类作为默认值
@@ -110,6 +115,7 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
         setIconType('1');
         setSavedCustomIcon('');
         setSavedIconifyIcon('');
+        setIconifyColor('');
       }
     }
   }, [open, link, form, defaultCategory]);
@@ -154,13 +160,13 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
         setPreviewIcon(faviconUrl || '');
       }
     } else if (value === '2') {
-      // 切换到自定义模式，恢复之前保存的自定义图标
-      const iconToRestore = savedCustomIcon || '';
+      // 切换到 Iconify 模式，恢复之前保存的 Iconify 图标
+      const iconToRestore = savedIconifyIcon || '';
       form.setFieldsValue({ icon: iconToRestore });
       setPreviewIcon(iconToRestore);
     } else if (value === '3') {
-      // 切换到 Iconify 模式，恢复之前保存的 Iconify 图标
-      const iconToRestore = savedIconifyIcon || '';
+      // 切换到自定义模式，恢复之前保存的自定义图标
+      const iconToRestore = savedCustomIcon || '';
       form.setFieldsValue({ icon: iconToRestore });
       setPreviewIcon(iconToRestore);
     }
@@ -172,7 +178,7 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
     form.setFieldsValue({ icon: iconUrl });
     setPreviewIcon(iconUrl);
     // 实时保存自定义图标
-    if (iconType === '2') {
+    if (iconType === '3') {
       setSavedCustomIcon(iconUrl);
     }
   }, [form, iconType]);
@@ -182,6 +188,21 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
     form.setFieldsValue({ icon: iconUrl });
     setPreviewIcon(iconUrl);
     setSavedIconifyIcon(iconUrl);
+  }, [form]);
+
+  // 处理 Iconify 颜色变化
+  const handleIconifyColorChange = useCallback((color: string) => {
+    setIconifyColor(color);
+    const currentIcon = form.getFieldValue('icon');
+    if (currentIcon) {
+      // 移除现有的 color 参数
+      const baseUrl = currentIcon.split('?')[0];
+      // 添加新的颜色参数
+      const newUrl = color ? `${baseUrl}?color=${encodeURIComponent(color)}` : baseUrl;
+      form.setFieldsValue({ icon: newUrl });
+      setPreviewIcon(newUrl);
+      setSavedIconifyIcon(newUrl);
+    }
   }, [form]);
 
   // 处理背景色变化
@@ -257,6 +278,7 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
       setIconType('1');
       setSavedCustomIcon('');
       setSavedIconifyIcon('');
+      setIconifyColor('');
       setLoading(false);
     } catch (error) {
       // 表单验证失败，界面已有提示
@@ -273,6 +295,7 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
     setIconType('1');
     setSavedCustomIcon('');
     setSavedIconifyIcon('');
+    setIconifyColor('');
     onCancel();
   };
 
@@ -385,14 +408,16 @@ export const EditLinkModal: React.FC<EditLinkModalProps> = ({
               options={iconOptions} 
             />
             {iconType === '2' ? (
-              <Form.Item name="icon" className="flex-1">
+              <Form.Item name="icon" className="flex-1 mb-0!">
                 <IconifySelector
                   value={form.getFieldValue('icon')}
                   onChange={handleIconifyChange}
+                  onColorChange={handleIconifyColorChange}
+                  iconColor={iconifyColor}
                 />
               </Form.Item>
             ) : (
-              <Form.Item name="icon" className="flex-1">
+              <Form.Item name="icon" className="flex-1 mb-0!">
                 <Input 
                   placeholder={iconType === '1' ? '自动获取' : '输入图标 URL'}
                   disabled={iconType === '1'}

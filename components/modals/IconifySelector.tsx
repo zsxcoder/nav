@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Button, Input, List, Popover, Spin, Empty } from 'antd';
+import { Button, Input, List, Popover, Spin, Empty, ColorPicker } from 'antd';
+import type { Color } from 'antd/es/color-picker';
 import { SearchOutlined, CheckOutlined } from '@ant-design/icons';
 import { iconifyApi, type IconOption } from '@/api/iconify';
+import { PRESET_COLORS } from '@/utils/colorUtils';
 
 /**
  * IconifySelector 组件 Props
@@ -17,29 +19,32 @@ interface IconifySelectorProps {
   disabled?: boolean;
   /** 占位符文本 */
   placeholder?: string;
+  /** 图标颜色变化回调 */
+  onColorChange?: (color: string) => void;
+  /** 当前图标颜色 */
+  iconColor?: string;
 }
 
 /**
- * 节流函数
+ * 防抖函数
  */
-function throttle<T extends (...args: any[]) => any>(
+function debounce<T extends (...args: any[]) => any>(
   func: T,
   delay: number
 ): (...args: Parameters<T>) => void {
   let timeoutId: NodeJS.Timeout | null = null;
-  let lastArgs: Parameters<T> | null = null;
 
-  return function throttled(...args: Parameters<T>) {
-    lastArgs = args;
-
-    if (!timeoutId) {
-      timeoutId = setTimeout(() => {
-        if (lastArgs) {
-          func(...lastArgs);
-        }
-        timeoutId = null;
-      }, delay);
+  return function debounced(...args: Parameters<T>) {
+    // 清除之前的定时器
+    if (timeoutId) {
+      clearTimeout(timeoutId);
     }
+
+    // 设置新的定时器
+    timeoutId = setTimeout(() => {
+      func(...args);
+      timeoutId = null;
+    }, delay);
   };
 }
 
@@ -109,6 +114,8 @@ export const IconifySelector: React.FC<IconifySelectorProps> = ({
   onChange,
   disabled = false,
   placeholder = '搜索 Iconify 图标',
+  onColorChange,
+  iconColor = '',
 }) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -123,21 +130,28 @@ export const IconifySelector: React.FC<IconifySelectorProps> = ({
 
   // 初始化：如果有 value，尝试解析为 IconOption
   useEffect(() => {
-    if (value && iconifyApi.isValidIconIdentifier(extractIconIdentifier(value))) {
+    if (value) {
       const identifier = extractIconIdentifier(value);
-      const label = identifier.split(':')[1] || identifier;
-      setSelectedIcon({
-        value: identifier,
-        label,
-        url: value,
-      });
+      console.log('IconifySelector 初始化:', { value, identifier });
+      
+      if (identifier && iconifyApi.isValidIconIdentifier(identifier)) {
+        const label = identifier.split(':')[1] || identifier;
+        console.log('设置选中图标:', { identifier, label });
+        setSelectedIcon({
+          value: identifier,
+          label,
+          url: value,
+        });
+      }
     }
   }, [value]);
 
   // 从 URL 提取图标标识符
   const extractIconIdentifier = (url: string): string => {
-    // URL 格式: https://api.iconify.design/prefix:name.svg
-    const match = url.match(/\/([^/]+)\.svg$/);
+    // URL 格式: https://api.iconify.design/prefix:name.svg 或 https://api.iconify.design/prefix:name.svg?color=white
+    // 先移除查询参数
+    const urlWithoutParams = url.split('?')[0];
+    const match = urlWithoutParams.match(/\/([^/]+)\.svg$/);
     return match ? match[1] : '';
   };
 
@@ -168,7 +182,7 @@ export const IconifySelector: React.FC<IconifySelectorProps> = ({
     try {
       const results = await iconifyApi.searchIcons({
         query: trimmedQuery,
-        limit: 100,
+        limit: 200,
       });
 
       // 缓存结果
@@ -191,9 +205,9 @@ export const IconifySelector: React.FC<IconifySelectorProps> = ({
     }
   }, [CACHE_DURATION]);
 
-  // 节流搜索
-  const throttledSearch = useCallback(
-    throttle(searchIcons, 300),
+  // 防抖搜索
+  const debouncedSearch = useCallback(
+    debounce(searchIcons, 500),
     [searchIcons]
   );
 
@@ -202,9 +216,9 @@ export const IconifySelector: React.FC<IconifySelectorProps> = ({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const newQuery = e.target.value;
       setQuery(newQuery);
-      throttledSearch(newQuery);
+      debouncedSearch(newQuery);
     },
-    [throttledSearch]
+    [debouncedSearch]
   );
 
   // 处理图标选择
@@ -214,10 +228,12 @@ export const IconifySelector: React.FC<IconifySelectorProps> = ({
       setOpen(false);
       
       if (onChange) {
-        onChange(icon.url);
+        // 如果有颜色，添加 color 参数
+        const iconUrl = iconColor ? `${icon.url}?color=${encodeURIComponent(iconColor)}` : icon.url;
+        onChange(iconUrl);
       }
     },
-    [onChange]
+    [onChange, iconColor]
   );
 
   // 处理键盘事件
@@ -232,10 +248,18 @@ export const IconifySelector: React.FC<IconifySelectorProps> = ({
 
   // 处理下拉框打开
   const handleOpenChange = useCallback((visible: boolean) => {
+    console.log('下拉框状态变化:', { visible, selectedIcon });
     setOpen(visible);
     
     if (visible) {
-      // 打开时聚焦搜索框
+      // 打开时，如果有选中的图标，回填图标名称到搜索框
+      if (selectedIcon) {
+        console.log('回填图标名称:', selectedIcon.label);
+        setQuery(selectedIcon.label);
+        // 自动搜索该图标名称
+        searchIcons(selectedIcon.label);
+      }
+      // 聚焦搜索框
       setTimeout(() => {
         searchInputRef.current?.focus();
       }, 100);
@@ -245,7 +269,7 @@ export const IconifySelector: React.FC<IconifySelectorProps> = ({
       setOptions([]);
       setError('');
     }
-  }, []);
+  }, [selectedIcon, searchIcons]);
 
   // 渲染下拉内容
   const renderContent = () => (
@@ -312,42 +336,64 @@ export const IconifySelector: React.FC<IconifySelectorProps> = ({
     </div>
   );
 
+  // 处理颜色变化
+  const handleColorChange = useCallback((color: Color) => {
+    const colorValue = color.toHexString();
+    if (onColorChange) {
+      onColorChange(colorValue);
+    }
+  }, [onColorChange]);
+
   return (
-    <Popover
-      content={renderContent()}
-      trigger="click"
-      open={open}
-      onOpenChange={handleOpenChange}
-      placement="bottomLeft"
-      overlayClassName="iconify-selector-popover"
-    >
-      <Button
-        disabled={disabled}
-        className="w-full justify-start"
-        style={{ textAlign: 'left' }}
-        aria-label="选择 Iconify 图标"
-        aria-haspopup="dialog"
-        aria-expanded={open}
+    <div className="flex items-center flex-1">
+      <Popover
+        content={renderContent()}
+        trigger="click"
+        open={open}
+        onOpenChange={handleOpenChange}
+        placement="bottomLeft"
       >
-        {selectedIcon ? (
-          <div className="flex items-center gap-2">
-            <img
-              src={selectedIcon.url}
-              alt={selectedIcon.label}
-              className="w-5 h-5"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-              }}
-            />
-            <span className="overflow-hidden text-ellipsis">
-              {selectedIcon.label}
-            </span>
-          </div>
-        ) : (
-          <span className="text-gray-400">选择 Iconify 图标</span>
-        )}
-      </Button>
-    </Popover>
+        <Button
+          disabled={disabled}
+          className="flex-1 justify-start rounded-r-none! border-r-0!"
+          style={{ textAlign: 'left' }}
+          aria-label="选择 Iconify 图标"
+          aria-haspopup="dialog"
+          aria-expanded={open}
+        >
+          {selectedIcon ? (
+            <div className="flex items-center gap-2">
+              <img
+                src={iconColor ? `${selectedIcon.url}?color=${encodeURIComponent(iconColor)}` : selectedIcon.url}
+                alt={selectedIcon.label}
+                className="w-5 h-5"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+              <span className="overflow-hidden text-ellipsis">
+                {selectedIcon.label}
+              </span>
+            </div>
+          ) : (
+            <span className="text-gray-400">选择 Iconify 图标</span>
+          )}
+        </Button>
+      </Popover>
+      <ColorPicker
+        className='w-28'
+        value={iconColor || '#000000'}
+        onChange={handleColorChange}
+        presets={[
+          {
+            label: '预设颜色',
+            colors: PRESET_COLORS,
+          },
+        ]}
+        showText
+        format="hex"
+      />
+    </div>
   );
 };
 

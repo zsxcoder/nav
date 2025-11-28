@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { Button, Input, List, Popover, Spin, Empty, ColorPicker } from 'antd';
 import type { Color } from 'antd/es/color-picker';
 import { SearchOutlined, CheckOutlined } from '@ant-design/icons';
 import { iconifyApi, type IconOption } from '@/api/iconify';
 import { PRESET_COLORS } from '@/utils/colorUtils';
+import { debounce } from '@/utils/debounce';
 
 /**
  * IconifySelector 组件 Props
@@ -23,29 +24,6 @@ interface IconifySelectorProps {
   onColorChange?: (color: string) => void;
   /** 当前图标颜色 */
   iconColor?: string;
-}
-
-/**
- * 防抖函数
- */
-function debounce<T extends (...args: any[]) => any>(
-  func: T,
-  delay: number
-): (...args: Parameters<T>) => void {
-  let timeoutId: NodeJS.Timeout | null = null;
-
-  return function debounced(...args: Parameters<T>) {
-    // 清除之前的定时器
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-
-    // 设置新的定时器
-    timeoutId = setTimeout(() => {
-      func(...args);
-      timeoutId = null;
-    }, delay);
-  };
 }
 
 /**
@@ -93,13 +71,9 @@ const IconOptionItem: React.FC<{
               ?
             </div>
           )}
-          <span className="overflow-hidden text-ellipsis whitespace-nowrap">
-            {icon.label}
-          </span>
+          <span className="overflow-hidden text-ellipsis whitespace-nowrap">{icon.label}</span>
         </div>
-        {selected && (
-          <CheckOutlined className="text-blue-500 shrink-0 ml-2" />
-        )}
+        {selected && <CheckOutlined className="text-blue-500 shrink-0 ml-2" />}
       </div>
     </List.Item>
   );
@@ -123,9 +97,11 @@ export const IconifySelector: React.FC<IconifySelectorProps> = ({
   const [options, setOptions] = useState<IconOption[]>([]);
   const [selectedIcon, setSelectedIcon] = useState<IconOption | null>(null);
   const [error, setError] = useState<string>('');
-  
+
   const searchInputRef = useRef<any>(null);
-  const searchCacheRef = useRef<Map<string, { results: IconOption[]; timestamp: number }>>(new Map());
+  const searchCacheRef = useRef<Map<string, { results: IconOption[]; timestamp: number }>>(
+    new Map()
+  );
   const CACHE_DURATION = 5 * 60 * 1000; // 5 分钟
 
   // 初始化：如果有 value，尝试解析为 IconOption
@@ -133,7 +109,7 @@ export const IconifySelector: React.FC<IconifySelectorProps> = ({
     if (value) {
       const identifier = extractIconIdentifier(value);
       console.log('IconifySelector 初始化:', { value, identifier });
-      
+
       if (identifier && iconifyApi.isValidIconIdentifier(identifier)) {
         const label = identifier.split(':')[1] || identifier;
         console.log('设置选中图标:', { identifier, label });
@@ -156,60 +132,60 @@ export const IconifySelector: React.FC<IconifySelectorProps> = ({
   };
 
   // 搜索图标
-  const searchIcons = useCallback(async (searchQuery: string) => {
-    if (!searchQuery || searchQuery.trim() === '') {
-      setOptions([]);
+  const searchIcons = useCallback(
+    async (searchQuery: string) => {
+      if (!searchQuery || searchQuery.trim() === '') {
+        setOptions([]);
+        setError('');
+        return;
+      }
+
+      const trimmedQuery = searchQuery.trim().toLowerCase();
+
+      // 检查缓存
+      const cached = searchCacheRef.current.get(trimmedQuery);
+      if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+        console.log('使用缓存的搜索结果:', trimmedQuery);
+        setOptions(cached.results);
+        if (cached.results.length === 0) {
+          setError('未找到相关图标');
+        }
+        return;
+      }
+
+      setLoading(true);
       setError('');
-      return;
-    }
 
-    const trimmedQuery = searchQuery.trim().toLowerCase();
+      try {
+        const results = await iconifyApi.searchIcons({
+          query: trimmedQuery,
+          limit: 200,
+        });
 
-    // 检查缓存
-    const cached = searchCacheRef.current.get(trimmedQuery);
-    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-      console.log('使用缓存的搜索结果:', trimmedQuery);
-      setOptions(cached.results);
-      if (cached.results.length === 0) {
-        setError('未找到相关图标');
+        // 缓存结果
+        searchCacheRef.current.set(trimmedQuery, {
+          results,
+          timestamp: Date.now(),
+        });
+
+        setOptions(results);
+
+        if (results.length === 0) {
+          setError('未找到相关图标');
+        }
+      } catch (err) {
+        console.error('搜索图标失败:', err);
+        setError('搜索失败，请稍后重试');
+        setOptions([]);
+      } finally {
+        setLoading(false);
       }
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    try {
-      const results = await iconifyApi.searchIcons({
-        query: trimmedQuery,
-        limit: 200,
-      });
-
-      // 缓存结果
-      searchCacheRef.current.set(trimmedQuery, {
-        results,
-        timestamp: Date.now(),
-      });
-
-      setOptions(results);
-      
-      if (results.length === 0) {
-        setError('未找到相关图标');
-      }
-    } catch (err) {
-      console.error('搜索图标失败:', err);
-      setError('搜索失败，请稍后重试');
-      setOptions([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [CACHE_DURATION]);
+    },
+    [CACHE_DURATION]
+  );
 
   // 防抖搜索
-  const debouncedSearch = useCallback(
-    debounce(searchIcons, 500),
-    [searchIcons]
-  );
+  const debouncedSearch = useMemo(() => debounce(searchIcons, 500), [searchIcons]);
 
   // 处理搜索输入
   const handleSearchChange = useCallback(
@@ -226,7 +202,7 @@ export const IconifySelector: React.FC<IconifySelectorProps> = ({
     (icon: IconOption) => {
       setSelectedIcon(icon);
       setOpen(false);
-      
+
       if (onChange) {
         // 如果有颜色，添加 color 参数
         const iconUrl = iconColor ? `${icon.url}?color=${encodeURIComponent(iconColor)}` : icon.url;
@@ -237,44 +213,44 @@ export const IconifySelector: React.FC<IconifySelectorProps> = ({
   );
 
   // 处理键盘事件
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setOpen(false);
-      }
-    },
-    []
-  );
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setOpen(false);
+    }
+  }, []);
 
   // 处理下拉框打开
-  const handleOpenChange = useCallback((visible: boolean) => {
-    console.log('下拉框状态变化:', { visible, selectedIcon });
-    setOpen(visible);
-    
-    if (visible) {
-      // 打开时，如果有选中的图标，回填图标名称到搜索框
-      if (selectedIcon) {
-        console.log('回填图标名称:', selectedIcon.label);
-        setQuery(selectedIcon.label);
-        // 自动搜索该图标名称
-        searchIcons(selectedIcon.label);
+  const handleOpenChange = useCallback(
+    (visible: boolean) => {
+      console.log('下拉框状态变化:', { visible, selectedIcon });
+      setOpen(visible);
+
+      if (visible) {
+        // 打开时，如果有选中的图标，回填图标名称到搜索框
+        if (selectedIcon) {
+          console.log('回填图标名称:', selectedIcon.label);
+          setQuery(selectedIcon.label);
+          // 自动搜索该图标名称
+          searchIcons(selectedIcon.label);
+        }
+        // 聚焦搜索框
+        setTimeout(() => {
+          searchInputRef.current?.focus();
+        }, 100);
+      } else {
+        // 关闭时清空搜索
+        setQuery('');
+        setOptions([]);
+        setError('');
       }
-      // 聚焦搜索框
-      setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, 100);
-    } else {
-      // 关闭时清空搜索
-      setQuery('');
-      setOptions([]);
-      setError('');
-    }
-  }, [selectedIcon, searchIcons]);
+    },
+    [selectedIcon, searchIcons]
+  );
 
   // 渲染下拉内容
   const renderContent = () => (
-    <div 
-      className="w-80" 
+    <div
+      className="w-80"
       style={{ maxHeight: '400px' }}
       onKeyDown={handleKeyDown}
       role="dialog"
@@ -294,8 +270,8 @@ export const IconifySelector: React.FC<IconifySelectorProps> = ({
       </div>
 
       {/* 图标列表 */}
-      <div 
-        className="overflow-y-auto" 
+      <div
+        className="overflow-y-auto"
         style={{ maxHeight: '320px' }}
         role="listbox"
         aria-label="图标列表"
@@ -307,11 +283,7 @@ export const IconifySelector: React.FC<IconifySelectorProps> = ({
           </div>
         ) : error ? (
           <div role="alert">
-            <Empty
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description={error}
-              className="py-8"
-            />
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={error} className="py-8" />
           </div>
         ) : options.length > 0 ? (
           <List
@@ -337,12 +309,15 @@ export const IconifySelector: React.FC<IconifySelectorProps> = ({
   );
 
   // 处理颜色变化
-  const handleColorChange = useCallback((color: Color) => {
-    const colorValue = color.toHexString();
-    if (onColorChange) {
-      onColorChange(colorValue);
-    }
-  }, [onColorChange]);
+  const handleColorChange = useCallback(
+    (color: Color) => {
+      const colorValue = color.toHexString();
+      if (onColorChange) {
+        onColorChange(colorValue);
+      }
+    },
+    [onColorChange]
+  );
 
   return (
     <div className="flex items-center flex-1">
@@ -364,16 +339,18 @@ export const IconifySelector: React.FC<IconifySelectorProps> = ({
           {selectedIcon ? (
             <div className="flex items-center gap-2">
               <img
-                src={iconColor ? `${selectedIcon.url}?color=${encodeURIComponent(iconColor)}` : selectedIcon.url}
+                src={
+                  iconColor
+                    ? `${selectedIcon.url}?color=${encodeURIComponent(iconColor)}`
+                    : selectedIcon.url
+                }
                 alt={selectedIcon.label}
                 className="w-5 h-5"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
               />
-              <span className="overflow-hidden text-ellipsis">
-                {selectedIcon.label}
-              </span>
+              <span className="overflow-hidden text-ellipsis">{selectedIcon.label}</span>
             </div>
           ) : (
             <span className="text-gray-400">选择 Iconify 图标</span>
@@ -381,7 +358,7 @@ export const IconifySelector: React.FC<IconifySelectorProps> = ({
         </Button>
       </Popover>
       <ColorPicker
-        className='w-28'
+        className="w-28"
         value={iconColor || '#000000'}
         onChange={handleColorChange}
         presets={[

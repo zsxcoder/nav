@@ -23,7 +23,12 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setCurrentCategory } from '@/store/slices/settingsSlice';
-import { addCategory, deleteCategory, updateCategory, reorderCategories } from '@/store/slices/categoriesSlice';
+import {
+  addCategory,
+  deleteCategory,
+  updateCategory,
+  reorderCategories,
+} from '@/store/slices/categoriesSlice';
 import { updateLink } from '@/store/slices/linksSlice';
 import { EditCategoryModal } from '@/components/modals/EditCategoryModal';
 import { Category } from '@/types/category';
@@ -54,14 +59,7 @@ const DraggableCategoryItem: React.FC<DraggableCategoryItemProps> = ({
   onDelete,
   renderIcon,
 }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: category.id,
   });
 
@@ -90,22 +88,17 @@ const DraggableCategoryItem: React.FC<DraggableCategoryItemProps> = ({
   ];
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-    >
-      <Dropdown
-        menu={{ items: contextMenuItems }}
-        trigger={['contextMenu']}
-      >
+    <div ref={setNodeRef} style={style}>
+      <Dropdown menu={{ items: contextMenuItems }} trigger={['contextMenu']}>
         <div
           {...listeners}
           {...attributes}
           className={`
             flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 cursor-pointer
-            ${isSelected 
-              ? 'text-white shadow-md bg-(--primary)' 
-              : 'hover:bg-blue-100 dark:hover:bg-blue-500/50 text-gray-600 dark:text-gray-400'
+            ${
+              isSelected
+                ? 'text-white shadow-md bg-(--primary)'
+                : 'hover:bg-blue-100 dark:hover:bg-blue-500/50 text-gray-600 dark:text-gray-400'
             }
           `}
           onClick={() => {
@@ -116,12 +109,18 @@ const DraggableCategoryItem: React.FC<DraggableCategoryItemProps> = ({
           }}
         >
           {/* 分类图标 */}
-          <div className={`w-5 h-5 flex items-center justify-center ${isSelected ? 'text-white' : 'text-gray-500 dark:text-gray-400'}`}>
+          <div
+            className={`w-5 h-5 flex items-center justify-center ${
+              isSelected ? 'text-white' : 'text-gray-500 dark:text-gray-400'
+            }`}
+          >
             {renderIcon(category.icon)}
           </div>
-          
+
           {/* 分类名称 */}
-          <div className={`flex-1 select-none text-sm font-medium ${isSelected ? 'text-white' : ''}`}>
+          <div
+            className={`flex-1 select-none text-sm font-medium ${isSelected ? 'text-white' : ''}`}
+          >
             {category.name}
           </div>
         </div>
@@ -177,24 +176,30 @@ const CategorySidebarBase: React.FC<CategorySidebarProps> = ({ className, style 
   }, []);
 
   // 处理分类切换
-  const handleCategoryChange = useCallback((categoryName: string) => {
-    dispatch(setCurrentCategory(categoryName));
-  }, [dispatch]);
+  const handleCategoryChange = useCallback(
+    (categoryName: string) => {
+      dispatch(setCurrentCategory(categoryName));
+    },
+    [dispatch]
+  );
 
   // 处理拖拽结束
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    const { active, over } = event;
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
 
-    if (over && active.id !== over.id) {
-      const oldIndex = categories.findIndex((cat) => cat.id === active.id);
-      const newIndex = categories.findIndex((cat) => cat.id === over.id);
+      if (over && active.id !== over.id) {
+        const oldIndex = categories.findIndex((cat) => cat.id === active.id);
+        const newIndex = categories.findIndex((cat) => cat.id === over.id);
 
-      if (oldIndex !== -1 && newIndex !== -1) {
-        dispatch(reorderCategories({ fromIndex: oldIndex, toIndex: newIndex }));
-        showSuccess('分类排序已更新');
+        if (oldIndex !== -1 && newIndex !== -1) {
+          dispatch(reorderCategories({ fromIndex: oldIndex, toIndex: newIndex }));
+          showSuccess('分类排序已更新');
+        }
       }
-    }
-  }, [categories, dispatch]);
+    },
+    [categories, dispatch]
+  );
 
   // 处理添加分类
   const handleAddCategory = useCallback(() => {
@@ -209,79 +214,92 @@ const CategorySidebarBase: React.FC<CategorySidebarProps> = ({ className, style 
   }, []);
 
   // 处理删除分类
-  const handleDeleteCategory = useCallback((category: Category) => {
-    // 查找该分类下的链接数量
-    const linksInCategory = links.filter(link => link.category === category.name);
-    
-    showConfirm({
-      title: '确认删除分类',
-      content: linksInCategory.length > 0 
-        ? `该分类下有 ${linksInCategory.length} 个链接，删除后这些链接的分类将被清空。确定要删除吗？`
-        : '确定要删除这个分类吗？',
-      okText: '删除',
-      cancelText: '取消',
-      okType: 'danger',
-      onOk: () => {
-        // 将该分类下的所有链接的分类字段置空
-        if (linksInCategory.length > 0) {
-          linksInCategory.forEach(link => {
-            dispatch(updateLink({
-              id: link.id,
-              category: '',
-            }));
-          });
-        }
-        
-        // 删除分类
-        dispatch(deleteCategory(category.id));
-        
-        // 如果删除的是当前选中的分类，切换到第一个分类
-        if (currentCategory === category.name) {
-          const remainingCategories = categories.filter(cat => cat.id !== category.id);
-          const sortedCategories = [...remainingCategories].sort((a, b) => a.order - b.order);
-          const nextCategory = sortedCategories[0]?.name || '主页';
-          dispatch(setCurrentCategory(nextCategory));
-        }
-        
-        showSuccess('分类已删除');
-      },
-    });
-  }, [dispatch, links, currentCategory, categories]);
+  const handleDeleteCategory = useCallback(
+    (category: Category) => {
+      // 查找该分类下的链接数量
+      const linksInCategory = links.filter((link) => link.category === category.name);
+
+      showConfirm({
+        title: '确认删除分类',
+        content:
+          linksInCategory.length > 0
+            ? `该分类下有 ${linksInCategory.length} 个链接，删除后这些链接的分类将被清空。确定要删除吗？`
+            : '确定要删除这个分类吗？',
+        okText: '删除',
+        cancelText: '取消',
+        okType: 'danger',
+        onOk: () => {
+          // 将该分类下的所有链接的分类字段置空
+          if (linksInCategory.length > 0) {
+            linksInCategory.forEach((link) => {
+              dispatch(
+                updateLink({
+                  id: link.id,
+                  category: '',
+                })
+              );
+            });
+          }
+
+          // 删除分类
+          dispatch(deleteCategory(category.id));
+
+          // 如果删除的是当前选中的分类，切换到第一个分类
+          if (currentCategory === category.name) {
+            const remainingCategories = categories.filter((cat) => cat.id !== category.id);
+            const sortedCategories = [...remainingCategories].sort((a, b) => a.order - b.order);
+            const nextCategory = sortedCategories[0]?.name || '主页';
+            dispatch(setCurrentCategory(nextCategory));
+          }
+
+          showSuccess('分类已删除');
+        },
+      });
+    },
+    [dispatch, links, currentCategory, categories]
+  );
 
   // 处理分类编辑提交
-  const handleCategorySubmit = useCallback((data: { name: string; icon: string }) => {
-    if (editingCategory) {
-      // 更新分类
-      const oldName = editingCategory.name;
-      dispatch(updateCategory({
-        id: editingCategory.id,
-        ...data,
-      }));
-      
-      // 更新所有使用该分类的链接
-      const linksToUpdate = links.filter(link => link.category === oldName);
-      linksToUpdate.forEach(link => {
-        dispatch(updateLink({
-          id: link.id,
-          category: data.name,
-        }));
-      });
-      
-      // 如果修改的是当前选中的分类，更新当前分类
-      if (currentCategory === oldName) {
-        dispatch(setCurrentCategory(data.name));
+  const handleCategorySubmit = useCallback(
+    (data: { name: string; icon: string }) => {
+      if (editingCategory) {
+        // 更新分类
+        const oldName = editingCategory.name;
+        dispatch(
+          updateCategory({
+            id: editingCategory.id,
+            ...data,
+          })
+        );
+
+        // 更新所有使用该分类的链接
+        const linksToUpdate = links.filter((link) => link.category === oldName);
+        linksToUpdate.forEach((link) => {
+          dispatch(
+            updateLink({
+              id: link.id,
+              category: data.name,
+            })
+          );
+        });
+
+        // 如果修改的是当前选中的分类，更新当前分类
+        if (currentCategory === oldName) {
+          dispatch(setCurrentCategory(data.name));
+        }
+
+        showSuccess('分类已更新');
+      } else {
+        // 添加新分类
+        dispatch(addCategory(data));
+        showSuccess('分类已添加');
       }
-      
-      showSuccess('分类已更新');
-    } else {
-      // 添加新分类
-      dispatch(addCategory(data));
-      showSuccess('分类已添加');
-    }
-    
-    setEditModalOpen(false);
-    setEditingCategory(null);
-  }, [dispatch, editingCategory, links, currentCategory]);
+
+      setEditModalOpen(false);
+      setEditingCategory(null);
+    },
+    [dispatch, editingCategory, links, currentCategory]
+  );
 
   // 渲染图标
   const renderIcon = useCallback((iconName: string) => {
@@ -290,14 +308,16 @@ const CategorySidebarBase: React.FC<CategorySidebarProps> = ({ className, style 
   }, []);
 
   // 计算未分类链接数量
-  const uncategorizedCount = useMemo(() => 
-    links.filter(link => !link.category || link.category === '').length
-  , [links]);
+  const uncategorizedCount = useMemo(
+    () => links.filter((link) => !link.category || link.category === '').length,
+    [links]
+  );
 
   // 排序后的分类列表
-  const sortedCategories = useMemo(() => 
-    [...categories].sort((a, b) => a.order - b.order)
-  , [categories]);
+  const sortedCategories = useMemo(
+    () => [...categories].sort((a, b) => a.order - b.order),
+    [categories]
+  );
 
   // 处理点击未分类按钮
   const handleUncategorizedClick = useCallback(() => {
@@ -307,12 +327,7 @@ const CategorySidebarBase: React.FC<CategorySidebarProps> = ({ className, style 
   // 在挂载前不渲染菜单，避免 hydration 不匹配
   if (!mounted) {
     return (
-      <nav 
-        className={className} 
-        style={style}
-        role="navigation"
-        aria-label="分类导航"
-      >
+      <nav className={className} style={style} role="navigation" aria-label="分类导航">
         <div className="flex flex-col h-full">
           <div style={{ flex: 1 }} />
         </div>
@@ -321,12 +336,7 @@ const CategorySidebarBase: React.FC<CategorySidebarProps> = ({ className, style 
   }
 
   return (
-    <nav 
-      className={className} 
-      style={style}
-      role="navigation"
-      aria-label="分类导航"
-    >
+    <nav className={className} style={style} role="navigation" aria-label="分类导航">
       <div className="flex flex-col h-full overflow-hidden">
         {/* 拖拽分类列表 - 可滚动区域 */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden">
@@ -356,7 +366,7 @@ const CategorySidebarBase: React.FC<CategorySidebarProps> = ({ className, style 
             </SortableContext>
           </DndContext>
         </div>
-        
+
         {/* 底部按钮区域 - 固定在底部 */}
         <div className="flex-none p-4 border-t text-sm border-gray-200 dark:border-neutral-700 space-y-2 bg-white dark:bg-antd-dark">
           {/* 未分类数据按钮 - 只在有未分类链接时显示 */}
@@ -365,19 +375,16 @@ const CategorySidebarBase: React.FC<CategorySidebarProps> = ({ className, style 
               icon={<ProjectOutlined />}
               onClick={handleUncategorizedClick}
               block
-              className={currentCategory === '未分类' ? 'bg-blue-50 border-blue-300 dark:bg-blue-900/30' : ''}
+              className={
+                currentCategory === '未分类' ? 'bg-blue-50 border-blue-300 dark:bg-blue-900/30' : ''
+              }
             >
               未分类({uncategorizedCount})
             </Button>
           )}
-          
+
           {/* 添加分类按钮 */}
-          <Button
-            type="dashed"
-            icon={<PlusOutlined />}
-            onClick={handleAddCategory}
-            block
-          >
+          <Button type="dashed" icon={<PlusOutlined />} onClick={handleAddCategory} block>
             添加分类
           </Button>
         </div>

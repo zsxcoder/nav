@@ -4,7 +4,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://nav.weizwz.com/sitemap.xml
+Sitemap: https://nav.mcyzsx.top/sitemap.xml
 
 # 禁止爬取的路径（如果有）
 # Disallow: /api/

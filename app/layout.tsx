@@ -5,16 +5,16 @@ import RegisterServiceWorker from './register-sw';
 import '@ant-design/v5-patch-for-react-19';
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://nav.weizwz.com'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://nav.mcyzsx.top'),
   title: {
-    default: '唯知导航',
-    template: '%s | 唯知导航',
+    default: 'ZSXの导航',
+    template: '%s | ZSXの导航',
   },
   description: '现代化的个人前端导航网站，提供开发工具、资源导航等功能',
-  keywords: ['导航', '开发工具', '资源导航', 'weizwz', '唯知为之', '前端导航', '开发者工具'],
-  authors: [{ name: 'weizwz', url: 'https://github.com/weizwz' }],
-  creator: 'weizwz',
-  publisher: 'weizwz',
+  keywords: ['导航', '开发工具', '资源导航', 'ZSX', '钟神秀', '前端导航', '开发者工具'],
+  authors: [{ name: 'zsxcoder', url: 'https://github.com/zsxcoder' }],
+  creator: 'zsxcoder',
+  publisher: 'zsxcoder',
   robots: {
     index: true,
     follow: true,
@@ -38,27 +38,27 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'zh_CN',
-    url: 'https://nav.weizwz.com',
-    title: '唯知导航',
+    url: 'https://nav.mcyzsx.top',
+    title: 'ZSXの导航',
     description: '现代化的个人前端导航网站',
-    siteName: '唯知导航',
+    siteName: 'ZSXの导航',
     images: [
       {
         url: '/logo.png',
         width: 512,
         height: 512,
-        alt: '唯知导航 Logo',
+        alt: 'ZSXの导航 Logo',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: '唯知导航',
+    title: 'ZSXの导航',
     description: '现代化的个人前端导航网站',
     images: ['/logo.png'],
   },
   alternates: {
-    canonical: 'https://nav.weizwz.com',
+    canonical: 'https://nav.mcyzsx.top',
   },
 };
 

@@ -76,7 +76,7 @@ export default function InstallPrompt() {
             <img src="/logo.png" alt="Logo" className="w-12 h-12 rounded-lg" />
             <div>
               <h3 className="font-semibold text-gray-900 dark:text-white">
-                安装唯知导航
+                安装ZSXの导航
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 快速访问，离线可用

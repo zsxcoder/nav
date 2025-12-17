@@ -48,7 +48,7 @@ const Header = memo(function Header({ onMenuClick }: HeaderProps) {
               className="w-5 h-5 object-contain"
             />
             <h1 className="text-base font-bold text-gray-800 dark:text-white whitespace-nowrap">
-              唯知导航
+              ZSXの导航
             </h1>
           </div>
 
@@ -76,7 +76,7 @@ const Header = memo(function Header({ onMenuClick }: HeaderProps) {
                 type="text"
                 icon={<GithubOutlined aria-hidden="true" />}
                 size='large'
-                onClick={() => window.open('https://github.com/weizwz/weiz-nav', '_blank', 'noopener,noreferrer')}
+                onClick={() => window.open('https://github.com/zsxcoder/nav', '_blank', 'noopener,noreferrer')}
                 aria-label="访问 GitHub 项目地址"
                 title="GitHub"
                 className="flex items-center justify-center"
@@ -96,7 +96,7 @@ const Header = memo(function Header({ onMenuClick }: HeaderProps) {
                 className="w-5 h-5 object-contain"
               />
               <h1 className="text-base font-bold text-gray-800 dark:text-white whitespace-nowrap">
-                唯知导航
+                ZSXの导航
               </h1>
             </div>
             <div className="flex items-center" role="toolbar" aria-label="工具栏">
@@ -130,7 +130,7 @@ const Header = memo(function Header({ onMenuClick }: HeaderProps) {
                   type="text"
                   icon={<GithubOutlined aria-hidden="true" />}
                   size='large'
-                  onClick={() => window.open('https://github.com/weizwz/weiz-nav', '_blank', 'noopener,noreferrer')}
+                  onClick={() => window.open('https://github.com/zsxcoder/nav', '_blank', 'noopener,noreferrer')}
                   aria-label="访问 GitHub 项目地址"
                   title="GitHub"
                   className="flex items-center justify-center"

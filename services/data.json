@@ -11,12 +11,12 @@
       "updatedAt": 1764665464193,
       "links": [
         {
-          "id": "1764324547789-61utrd0ua",
-          "name": "Gmail",
-          "url": "https://mail.google.com/",
+          "id": "1",
+          "name": "ZSXの主页",
+          "url": "https://home.mcyzsx.top/",
           "description": "Google提供的免费电子邮件服务",
           "category": "主页",
-          "icon": "https://favicon.im/mail.google.com?larger=true",
+          "icon": "https://favicon.im/home.mcyzsx.top?larger=true",
           "backgroundColor": "#ffffff",
           "iconScale": 0.7,
           "tags": [],
@@ -277,7 +277,7 @@
         },
         {
           "id": "1764324547789-uq4rm2ffb",
-          "name": "唯知导航",
+          "name": "ZSXの导航",
           "url": "https://nav.weizwz.com/",
           "description": "简洁、高效的网页导航",
           "category": "主页",
